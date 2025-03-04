@@ -1,11 +1,15 @@
+import { generateAPIUrl } from '@/utils';
+import { useChat } from '@ai-sdk/react';
+import { fetch as expoFetch } from 'expo/fetch';
+
 import React, { useState, useRef, useEffect } from 'react';
-import { YStack, Text, Button, Input, XStack } from 'tamagui';
+import { Text, Button } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { 
-  KeyboardAvoidingView,
-  Platform, 
-  ScrollView, 
-  View, 
+import {
+  Platform,
+  ScrollView,
+  View,
+  SafeAreaView,
   StatusBar,
   Keyboard,
   TextInput,
@@ -14,165 +18,57 @@ import {
   Dimensions,
   Alert
 } from 'react-native';
-import Constants from 'expo-constants';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-// Get the API URL based on the environment
-const getApiUrl = (endpoint = 'api/chat') => {
-  // For development, use a direct IP address that's most likely to work
-  if (__DEV__) {
-    // Use a hardcoded IP that matches your development machine
-    // This is more reliable than trying to detect it dynamically
-    return `http://192.168.0.229:8081/${endpoint}`;
-  }
-  
-  // For production, use the deployed URL
-  return `https://your-production-domain.com/${endpoint}`;
-};
+// We'll use generateAPIUrl from utils instead of this function
 
 export default function App() {
-  // Get safe area insets to handle notch
   const insets = useSafeAreaInsets();
-  
-  // Ref for ScrollView to enable auto-scrolling
   const scrollViewRef = useRef<ScrollView>(null);
-  
-  // Simple state management for a basic chat
-  const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
-  const [input, setInput] = useState('');
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [inputHeight, setInputHeight] = useState(64); // Default input container height
-  const [isLoading, setIsLoading] = useState(false);
 
-  // Calculate the bottom padding to account for the tab bar
-  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom + 49 : 49;
-
-  // Updated send function to use the chat API
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    
-    // Add user message
-    const userMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMessage]);
-    
-    // Clear input
-    setInput('');
-    
-    // Show loading state
-    setIsLoading(true);
-    
-    try {
-      // Prepare messages for API
-      const apiMessages = [...messages, userMessage].map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
-      
-      // First test the hello endpoint
-      try {
-        console.log('Testing hello endpoint...');
-        const helloUrl = getApiUrl('hello');
-        const testResponse = await fetch(helloUrl, { method: 'GET' });
-        
-        if (testResponse.ok) {
-          const testData = await testResponse.json();
-          console.log('Hello endpoint working:', testData);
-        } else {
-          console.log('Hello endpoint failed with status:', testResponse.status);
-        }
-      } catch (testError) {
-        console.log('Hello endpoint error - continuing anyway');
-      }
-      
-      // Call the chat API
-      const chatApiUrl = getApiUrl('api/chat');
-      console.log('Calling API at:', chatApiUrl);
-      
-      const response = await fetch(chatApiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages: apiMessages }),
-      });
-      
-      console.log('API response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let responseText = '';
-      
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          const chunk = decoder.decode(value, { stream: true });
-          responseText += chunk;
-          
-          // Update the assistant message as chunks arrive
-          setMessages(prev => {
-            // Check if we already have an assistant message
-            const hasAssistantMessage = prev.length > 0 && 
-              prev[prev.length - 1].role === 'assistant';
-            
-            if (hasAssistantMessage) {
-              // Update the existing assistant message
-              return [
-                ...prev.slice(0, -1),
-                { role: 'assistant', content: responseText }
-              ];
-            } else {
-              // Add a new assistant message
-              return [...prev, { role: 'assistant', content: responseText }];
-            }
-          });
-        }
-      } else {
-        // Fallback for browsers that don't support streaming
-        const text = await response.text();
-        setMessages(prev => [...prev, { role: 'assistant', content: text }]);
-      }
-    } catch (error: any) {
-      console.error('Error calling chat API:', error);
-      // Add error message
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, there was an error processing your request. Please try again.' 
-      }]);
-      
-      // Show error alert with more details
+  // Use the AI SDK's useChat hook for message management
+  const { messages, error, handleInputChange, input, handleSubmit, isLoading } = useChat({
+    fetch: expoFetch as unknown as typeof globalThis.fetch,
+    api: generateAPIUrl('/api/chat'),
+    onError: error => {
+      console.error('Chat error:', error);
       Alert.alert(
         'API Error',
         `Failed to connect to the API. Error: ${error.message || 'Unknown error'}`,
         [{ text: 'OK' }]
       );
-    } finally {
-      setIsLoading(false);
-      // Scroll to bottom after response
-      scrollToBottom();
-    }
-  };
+    },
+    onFinish: () => {
+      // Scroll to bottom when a message is complete
+      setTimeout(() => scrollToBottom(), 100);
+    },
+    maxSteps: 5,
+  });
+
+  // Display error message if there's an error
+  if (error) return <Text style={{ padding: 20, color: 'red' }}>{error.message}</Text>;
+
+  // UI state management
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [inputHeight, setInputHeight] = useState(64); // Default input container height
+
+  // Calculate the bottom padding to account for the tab bar
+  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom + 49 : 49;
 
   // Configure smooth layout animations
   const configureAnimation = () => {
     LayoutAnimation.configureNext({
       duration: 0,
-      create: { 
+      create: {
         type: LayoutAnimation.Types.easeInEaseOut,
         property: LayoutAnimation.Properties.opacity,
       },
-      update: { 
+      update: {
         type: LayoutAnimation.Types.easeInEaseOut,
       },
     });
@@ -180,26 +76,26 @@ export default function App() {
 
   // Keyboard listeners to adjust UI when keyboard appears/disappears
   useEffect(() => {
-    const keyboardWillShowListener = Platform.OS === 'ios' ? 
+    const keyboardWillShowListener = Platform.OS === 'ios' ?
       Keyboard.addListener('keyboardWillShow', (event) => {
         configureAnimation();
         setKeyboardVisible(true);
         setKeyboardHeight(event.endCoordinates.height);
         scrollToBottom();
-      }) : 
+      }) :
       Keyboard.addListener('keyboardDidShow', (event) => {
         configureAnimation();
         setKeyboardVisible(true);
         setKeyboardHeight(event.endCoordinates.height);
         scrollToBottom();
       });
-    
-    const keyboardWillHideListener = Platform.OS === 'ios' ? 
+
+    const keyboardWillHideListener = Platform.OS === 'ios' ?
       Keyboard.addListener('keyboardWillHide', () => {
         configureAnimation();
         setKeyboardVisible(false);
         setKeyboardHeight(0);
-      }) : 
+      }) :
       Keyboard.addListener('keyboardDidHide', () => {
         configureAnimation();
         setKeyboardVisible(false);
@@ -236,12 +132,12 @@ export default function App() {
   const contentHeight = windowHeight - insets.top - headerHeight - (keyboardVisible ? keyboardHeight : tabBarHeight);
 
   return (
-    <View style={{ 
-      flex: 1, 
+    <View style={{
+      flex: 1,
       backgroundColor: '#FFFFFF',
     }}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* Content container with safe area padding */}
       <View style={{
         flex: 1,
@@ -250,14 +146,14 @@ export default function App() {
       }}>
         {/* Header - only show when keyboard is not visible */}
         {!keyboardVisible && (
-          <View style={{ 
+          <View style={{
             marginBottom: 20,
             height: headerHeight,
             justifyContent: 'center',
           }}>
-            <Text style={{ 
-              fontSize: 24, 
-              fontWeight: 'bold', 
+            <Text style={{
+              fontSize: 24,
+              fontWeight: 'bold',
               color: '#333333',
               textAlign: 'center'
             }}>
@@ -265,19 +161,19 @@ export default function App() {
             </Text>
           </View>
         )}
-        
+
         {/* Main content area with messages */}
-        <View style={{ 
+        <View style={{
           height: contentHeight,
           position: 'relative',
         }}>
           {/* Messages area with ScrollView */}
-          <ScrollView 
+          <ScrollView
             ref={scrollViewRef}
-            style={{ 
+            style={{
               flex: 1,
             }}
-            contentContainerStyle={{ 
+            contentContainerStyle={{
               paddingBottom: safeInputHeight + 0, // Reduced padding to eliminate gap
             }}
             keyboardShouldPersistTaps="handled"
@@ -292,34 +188,38 @@ export default function App() {
                   marginVertical: 10,
                   opacity: keyboardVisible ? 0.5 : 1, // Fade when keyboard is visible
                 }}>
-                  <Text style={{ 
-                    color: '#666666', 
-                    fontSize: 16, 
+                  <Text style={{
+                    color: '#666666',
+                    fontSize: 16,
                     textAlign: 'center',
                   }}>
                     Send a message to start chatting
                   </Text>
                 </View>
               ) : (
-                messages.map((message, index) => (
-                  <View 
-                    key={index} 
+                messages.map((m, index) => (
+                  <View
+                    key={index}
                     style={{
                       marginVertical: 4, // Further reduced vertical margin
                       padding: 12,
                       borderRadius: 12,
-                      backgroundColor: message.role === 'user' ? '#e1f5fe' : '#e8f5e9',
+                      backgroundColor: m.role === 'user' ? '#007AFF' : '#E5E5EA',
                       borderWidth: 1,
-                      borderColor: message.role === 'user' ? '#bbdefb' : '#c8e6c9',
-                      alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
+                      borderColor: m.role === 'user' ? '#bbdefb' : '#c8e6c9',
+                      alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
                       maxWidth: '80%',
                     }}
                   >
-                    <Text style={{ 
-                      color: '#333333', 
-                      fontWeight: message.role === 'user' ? 'bold' : 'normal',
+                    <Text style={{
+                      color: m.role === 'user' ? '#FFFFFF' : '#333333',
+                      fontWeight: m.role === 'user' ? 'normal' : 'normal',
                     }}>
-                      {message.content}
+                      {m.parts ? (
+                        <Text>{JSON.stringify(m.parts, null, 2)}</Text>
+                      ) : (
+                        <Text>{m.content}</Text>
+                      )}
                     </Text>
                   </View>
                 ))
@@ -329,7 +229,7 @@ export default function App() {
         </View>
 
         {/* Input area - positioned at the bottom but not fixed */}
-        <View 
+        <View
           style={{
             position: 'absolute',
             bottom: keyboardVisible ? keyboardHeight : tabBarHeight,
@@ -371,11 +271,11 @@ export default function App() {
               placeholder="Type a message..."
               placeholderTextColor="#999999"
               value={input}
-              onChangeText={setInput}
-              onSubmitEditing={handleSend}
+              onChangeText={(text) => handleInputChange({ target: { value: text } } as any)}
+              onSubmitEditing={() => handleSubmit({} as any)}
               editable={!isLoading}
             />
-            <Button 
+            <Button
               style={{
                 marginLeft: 8,
                 height: 40,
@@ -385,7 +285,7 @@ export default function App() {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
-              onPress={handleSend} 
+              onPress={() => handleSubmit({} as any)}
               disabled={!input.trim() || isLoading}
             >
               <Text style={{ color: 'white', fontWeight: 'bold' }}>
