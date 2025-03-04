@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { generateAPIUrl } from '@/utils';
@@ -6,12 +6,10 @@ import { fetch as expoFetch } from 'expo/fetch';
 import {
   AudioSession,
   LiveKitRoom,
-  useTracks,
   useLocalParticipant,
   useRoomContext,
   registerGlobals,
 } from '@livekit/react-native';
-import { Track } from 'livekit-client';
 
 // Register LiveKit globals
 registerGlobals();
@@ -29,6 +27,36 @@ export default function VoiceScreen() {
   useEffect(() => {
     fetchToken();
   }, []);
+  
+  // Setup audio session whenever mic is active
+  useEffect(() => {
+    // Start audio session when component loads (following LiveKit example)
+    const start = async () => {
+      try {
+        if (AudioSession) {
+          console.log('Starting audio session...');
+          await AudioSession.startAudioSession();
+          console.log('Audio session started successfully');
+        } else {
+          console.warn('AudioSession is not available');
+        }
+      } catch (error) {
+        console.error('Error starting audio session:', error);
+      }
+    };
+    
+    if (isMicActive) {
+      start();
+    }
+    
+    // Clean up audio session when component unmounts
+    return () => {
+      if (AudioSession && isMicActive) {
+        console.log('Stopping audio session');
+        AudioSession.stopAudioSession();
+      }
+    };
+  }, [isMicActive]);
   
   // Calculate the width of the audio level indicator as a percentage
   const audioLevelPercentage = Math.min(100, audioLevel * 100);
@@ -71,9 +99,6 @@ export default function VoiceScreen() {
   // Toggle microphone state
   const toggleMicrophone = () => {
     if (!isMicActive) {
-      // Start audio session when turning on mic
-      AudioSession.startAudioSession();
-      
       // If we don't have a token yet, try to fetch it again
       if (!token) {
         console.log('No token available, fetching again...');
@@ -84,13 +109,11 @@ export default function VoiceScreen() {
       console.log('Connecting to LiveKit...');
       setIsConnected(true);
     } else {
-      // Stop audio session when turning off mic
-      AudioSession.stopAudioSession();
-      
       // Disconnect from LiveKit
       console.log('Disconnecting from LiveKit...');
       setIsConnected(false);
     }
+    
     setIsMicActive(!isMicActive);
   };
   
@@ -145,9 +168,19 @@ export default function VoiceScreen() {
         </Text>
       </View>
       
+      <View style={styles.statusContainer}>
+        <Text style={styles.statusLabel}>Connection Status:</Text>
+        <Text style={[
+          styles.statusValue, 
+          { color: isConnected ? '#4CAF50' : '#F44336' }
+        ]}>
+          {isConnected ? 'Connected' : 'Disconnected'}
+        </Text>
+      </View>
+      
       {/* Audio level indicator */}
       <View style={styles.audioLevelContainer}>
-        <Text style={styles.audioLevelLabel}>Audio Level:</Text>
+        <Text style={styles.audioLevelLabel}>Audio Level: {(audioLevel * 100).toFixed(1)}%</Text>
         <View style={styles.audioLevelOuter}>
           <View 
             style={[styles.audioLevelInner, { width: `${audioLevelPercentage}%` }]}
@@ -179,6 +212,7 @@ export default function VoiceScreen() {
         {token ? 'Connected to LiveKit for real-time audio processing.' : 'Waiting to connect to LiveKit...'}
       </Text>
       
+      {/* Render LiveKit room */}
       {renderLiveKitRoom()}
     </View>
   );
@@ -191,20 +225,95 @@ const AudioLevelMonitor = ({ setAudioLevel }) => {
   
   // Monitor audio levels
   useEffect(() => {
-    if (!room || !localParticipant) return;
+    if (!room || !localParticipant) {
+      console.log('AudioLevelMonitor: room or localParticipant not available');
+      return;
+    }
     
-    const handleAudioLevel = (audioLevel) => {
-      setAudioLevel(audioLevel);
-    };
+    console.log('Setting up audio level monitoring for participant:', localParticipant.identity);
     
-    // Subscribe to audio level updates
-    const subscription = room.on('audioLevelChanged', (levels) => {
-      const localLevel = levels.get(localParticipant.sid) || 0;
-      handleAudioLevel(localLevel);
-    });
+    // Create simulation for testing UI - working well in the simulator
+    let simInterval;
+    
+    // Only use simulation if debugging is needed
+    const DEBUG_SIMULATION = false; // Keep enabled for simulator testing
+    
+    if (DEBUG_SIMULATION) {
+      let simLevel = 0;
+      let increasing = true;
+      
+      const simulateAudio = () => {
+        if (increasing) {
+          simLevel += 0.05;
+          if (simLevel >= 0.8) increasing = false;
+        } else {
+          simLevel -= 0.05;
+          if (simLevel <= 0.1) increasing = true;
+        }
+        
+        console.log('Simulated audio level:', simLevel.toFixed(2));
+        setAudioLevel(simLevel);
+      };
+      
+      simInterval = setInterval(simulateAudio, 500);
+    }
+    
+    // For real devices, listen to audio level changes
+    // For React Native, we'll use direct audioLevel property monitoring
+    // rather than room.startAudioLevelMonitor which isn't available
+    let realAudioMonitor;
+    
+    if (!DEBUG_SIMULATION) {
+      // For real devices, let's try to use the audio level subscription
+      const checkAudioLevels = () => {
+        // Access the audioLevel directly from the participant
+        const level = localParticipant.audioLevel || 0;
+        
+        // Apply some amplification for better visualization
+        const amplifiedLevel = Math.min(1, level * 3);
+        setAudioLevel(amplifiedLevel);
+        
+        // Debug log to see if we're getting audio levels
+        if (level > 0.05) {
+          console.log('Audio level detected:', level);
+        }
+      };
+      
+      // Check audio levels every 100ms
+      realAudioMonitor = setInterval(checkAudioLevels, 100);
+      
+      // Also try to subscribe to the audioLevelChanged event if available
+      try {
+        console.log('Setting up audioLevelChanged event listener');
+        const subscription = room.on('audioLevelChanged', (levels) => {
+          if (DEBUG_SIMULATION) return;
+          
+          const localLevel = levels.get(localParticipant.sid) || 0;
+          
+          // Apply some amplification for better visualization
+          const amplifiedLevel = Math.min(1, localLevel * 3);
+          setAudioLevel(amplifiedLevel);
+          
+          // Debug log to see if we're getting audio levels
+          if (localLevel > 0.05) {
+            console.log('Audio level changed event detected:', localLevel);
+          }
+        });
+        
+        return () => {
+          if (simInterval) clearInterval(simInterval);
+          if (realAudioMonitor) clearInterval(realAudioMonitor);
+          subscription.dispose();
+        };
+      } catch (error) {
+        console.log('Error setting up audioLevelChanged listener:', error);
+        // Continue with interval-based monitoring if event listener fails
+      }
+    }
     
     return () => {
-      subscription.dispose();
+      if (simInterval) clearInterval(simInterval);
+      if (realAudioMonitor) clearInterval(realAudioMonitor);
     };
   }, [room, localParticipant, setAudioLevel]);
   
