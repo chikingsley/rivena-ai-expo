@@ -5,11 +5,12 @@ import { generateAPIUrl } from '@/utils';
 import { fetch as expoFetch } from 'expo/fetch';
 import {
   AudioSession,
-  LiveKitRoom,
   useLocalParticipant,
   useRoomContext,
   registerGlobals,
+  LiveKitRoom
 } from '@livekit/react-native';
+import type { DisconnectReason } from 'livekit-client';
 
 // Register LiveKit globals
 registerGlobals();
@@ -61,7 +62,7 @@ export default function VoiceScreen() {
   // Calculate the width of the audio level indicator as a percentage
   const audioLevelPercentage = Math.min(100, audioLevel * 100);
   
-  // LiveKit Room component
+  // Function to render LiveKit room
   const renderLiveKitRoom = () => {
     if (!token || !wsURL) {
       console.log('Cannot render LiveKitRoom - missing token or URL', { token, wsURL });
@@ -83,7 +84,7 @@ export default function VoiceScreen() {
           console.log('LiveKit connected successfully');
           setIsConnected(true);
         }}
-        onDisconnected={(reason) => {
+        onDisconnected={(reason?: DisconnectReason) => {
           console.log('LiveKit disconnected:', reason);
           setIsConnected(false);
         }}
@@ -154,6 +155,7 @@ export default function VoiceScreen() {
     }
   };
   
+  // Wrap content in RoomProvider if we have a room from the hook
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>Voice Test</Text>
