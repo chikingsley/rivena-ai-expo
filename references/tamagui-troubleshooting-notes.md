@@ -129,12 +129,70 @@
   - Pre-calculate final positions before animation starts
   - Batch related UI updates to prevent cascading layout calculations
 
-### 13. Chat UI Implementation
+### 13. Implementing Animated API for Smooth Transitions
+- Successfully implemented React Native's Animated API to create smoother animations
+- Fixed by:
+  - Creating three animated values: `keyboardAnim`, `contentHeightAnim`, and `headerOpacityAnim`
+  - Using `Animated.timing()` with proper easing curves to match iOS keyboard animations
+  - Extracting animation duration from keyboard events: `event.duration || 250`
+  - Using `Animated.parallel()` to run multiple animations simultaneously
+  - Replacing state updates with animated interpolations
+  - Converting regular Views to Animated.Views for components that need animation
+  - Using `interpolate()` to map keyboard height to input position
+  - Using `Animated.add()` to combine multiple animated values for content height
+  - Setting `useNativeDriver: false` since we're animating layout properties
+  - Using the Bezier curve `Easing.bezier(0.17, 0.59, 0.4, 0.77)` to match iOS keyboard animation
+  - Delaying state updates until after animations complete
+
+### 14. Animation Error Handling
+- Encountered error: "Invariant Violation: outputRange must contain color or value with numeric component"
+- The error was caused by trying to animate the `display` property with `interpolate()`
+- Fixed by:
+  - Simplifying the animation approach
+  - Replacing opacity + display animation with a single height animation
+  - Using `headerHeightAnim` instead of `headerOpacityAnim`
+  - Animating the header from 64px to 0px height instead of changing opacity and display
+  - Adding `overflow: 'hidden'` to the header container to properly clip content
+  - Moving state updates (`setKeyboardVisible`, `setKeyboardHeight`) to happen after animations complete
+  - Removing complex content height calculations with `Animated.add()`
+  - Using a simpler approach with a regular View and calculated height
+
+### 15. Animation Reset Issue
+- Animations were not smooth - input would "reset" position after keyboard appeared/disappeared
+- The issue was caused by mixing animated positioning with state-based layout changes
+- Fixed by:
+  - Removing state variables (`keyboardVisible`, `keyboardHeight`) entirely
+  - Using a ref (`isKeyboardVisible.current`) to track keyboard state without triggering re-renders
+  - Making animations fully control all positioning without any state-based layout changes
+  - Using `Animated.subtract` and `Animated.add` for dynamic content height calculations
+  - Properly interpolating the input position based on keyboard height
+  - Preventing duplicate animations with guard clauses
+  - Ensuring animations complete before any state changes
+  - Adjusting the output range of interpolations to match the exact positions needed
+  - Using `tabBarHeight` directly in animations instead of conditional calculations
+
+### 16. Chat UI Implementation
 - Started with React Native's native components instead of Tamagui
 - Used explicit inline styling rather than theme variables
 - Created chat message bubbles with appropriate styling and positioning
 - Made sure colors have good contrast for visibility
 - Added proper keyboard handling with `KeyboardAvoidingView`
+
+### 17. Using KeyboardAwareScrollView for Better Keyboard Handling
+- Previous approaches with Animated API and KeyboardAvoidingView had issues with input and messages not moving properly with keyboard
+- Implemented a specialized third-party library for better keyboard handling
+- Fixed by:
+  - Installing `react-native-keyboard-aware-scroll-view` package
+  - Replacing ScrollView with KeyboardAwareScrollView
+  - Setting proper configuration options:
+    - `enableOnAndroid={true}` to ensure consistent behavior across platforms
+    - `extraScrollHeight={Platform.OS === 'ios' ? 80 : 30}` to provide extra space above keyboard
+    - `extraHeight={120}` for additional padding
+    - `enableAutomaticScroll={true}` to automatically scroll when keyboard appears
+  - Keeping the input as a fixed position element at the bottom
+  - Adjusting the input's bottom padding based on keyboard visibility and tab bar height
+  - Modifying the scrollToEnd method to work with KeyboardAwareScrollView
+  - Maintaining keyboard event listeners to handle UI adjustments when keyboard appears/disappears
 
 ## Key Learnings
 
@@ -188,6 +246,18 @@
    - Synchronizing multiple elements requires a shared animation driver
    - Reducing state updates during animation improves performance
    - For complex animations, consider specialized libraries like Reanimated
+   - Extract animation duration from keyboard events: `event.duration || 250`
+   - Use Bezier curves to match iOS keyboard animation: `Easing.bezier(0.17, 0.59, 0.4, 0.77)`
+   - Delay state updates until after animations complete to prevent UI jumps
+   - Use `Animated.parallel()` to run multiple animations simultaneously
+   - Use `interpolate()` to map values from one range to another
+   - Not all properties can be animated with `interpolate()` - `display` is one that causes errors
+   - When encountering animation errors, simplify the approach - animate size instead of opacity + display
+   - Add `overflow: 'hidden'` when animating container heights to properly clip content
+   - Avoid mixing animated positioning with state-based layout changes
+   - Use refs instead of state when tracking values that shouldn't trigger re-renders
+   - Prevent duplicate animations with guard clauses
+   - Use `Animated.add` and `Animated.subtract` for complex dynamic calculations
 
 8. **Incremental Implementation**: When troubleshooting UI issues, start with simpler components and gradually add complexity to isolate the problem.
 

@@ -2,23 +2,41 @@ import React, { useState, useRef, useEffect } from 'react';
 import { YStack, Text, Button, Input, XStack } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { 
-  KeyboardAvoidingView, 
+  KeyboardAvoidingView,
   Platform, 
   ScrollView, 
   View, 
   StatusBar,
   Keyboard,
   TextInput,
-  Animated,
   LayoutAnimation,
   UIManager,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native';
+import Constants from 'expo-constants';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
+
+// Get the API URL based on the environment
+const getApiUrl = () => {
+  // For Expo Go, use the development server URL
+  if (__DEV__) {
+    // Get the Expo development server URL
+    const localhost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+    const devServerUrl = Constants.expoConfig?.hostUri 
+      ? Constants.expoConfig.hostUri.split(':')[0] 
+      : localhost;
+    
+    return `http://${devServerUrl}:3000/api/chat`;
+  }
+  
+  // For production, use the deployed URL
+  return 'https://your-production-domain.com/api/chat';
+};
 
 export default function App() {
   // Get safe area insets to handle notch
@@ -33,24 +51,102 @@ export default function App() {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [inputHeight, setInputHeight] = useState(64); // Default input container height
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Simple send function 
-  const handleSend = () => {
+  // Calculate the bottom padding to account for the tab bar
+  const tabBarHeight = Platform.OS === 'ios' ? insets.bottom + 49 : 49;
+
+  // Updated send function to use the chat API
+  const handleSend = async () => {
     if (!input.trim()) return;
     
     // Add user message
-    setMessages([...messages, { role: 'user', content: input }]);
+    const userMessage = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
     
     // Clear input
     setInput('');
     
-    // Simulate AI response after a short delay
-    setTimeout(() => {
+    // Show loading state
+    setIsLoading(true);
+    
+    try {
+      // Prepare messages for API
+      const apiMessages = [...messages, userMessage].map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+      
+      console.log('Calling API at:', getApiUrl());
+      
+      // Call the chat API with the full URL
+      const response = await fetch(getApiUrl(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages: apiMessages }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let responseText = '';
+      
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          responseText += chunk;
+          
+          // Update the assistant message as chunks arrive
+          setMessages(prev => {
+            // Check if we already have an assistant message
+            const hasAssistantMessage = prev.length > 0 && 
+              prev[prev.length - 1].role === 'assistant';
+            
+            if (hasAssistantMessage) {
+              // Update the existing assistant message
+              return [
+                ...prev.slice(0, -1),
+                { role: 'assistant', content: responseText }
+              ];
+            } else {
+              // Add a new assistant message
+              return [...prev, { role: 'assistant', content: responseText }];
+            }
+          });
+        }
+      } else {
+        // Fallback for browsers that don't support streaming
+        const text = await response.text();
+        setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+      }
+    } catch (error: any) {
+      console.error('Error calling chat API:', error);
+      // Add error message
       setMessages(prev => [...prev, { 
         role: 'assistant', 
-        content: `You said: "${input}". This is a simple echo response.` 
+        content: 'Sorry, there was an error processing your request. Please try again.' 
       }]);
-    }, 1000);
+      
+      // Show error alert with more details
+      Alert.alert(
+        'API Error',
+        `Failed to connect to the API. Error: ${error.message || 'Unknown error'}`,
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setIsLoading(false);
+      // Scroll to bottom after response
+      scrollToBottom();
+    }
   };
 
   // Configure smooth layout animations
@@ -117,9 +213,6 @@ export default function App() {
       }
     }, 100);
   };
-
-  // Calculate the bottom padding to account for the tab bar
-  const tabBarHeight = Platform.OS === 'ios' ? (keyboardVisible ? 0 : insets.bottom + 49) : 49;
 
   // Calculate the content container height - leave more space for the input
   const windowHeight = Dimensions.get('window').height;
@@ -265,22 +358,23 @@ export default function App() {
               value={input}
               onChangeText={setInput}
               onSubmitEditing={handleSend}
+              editable={!isLoading}
             />
             <Button 
               style={{
                 marginLeft: 8,
                 height: 40,
                 paddingHorizontal: 16,
-                backgroundColor: '#2196f3',
+                backgroundColor: isLoading ? '#cccccc' : '#2196f3',
                 borderRadius: 20,
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
               onPress={handleSend} 
-              disabled={!input.trim()}
+              disabled={!input.trim() || isLoading}
             >
               <Text style={{ color: 'white', fontWeight: 'bold' }}>
-                Send
+                {isLoading ? 'Sending...' : 'Send'}
               </Text>
             </Button>
           </View>
