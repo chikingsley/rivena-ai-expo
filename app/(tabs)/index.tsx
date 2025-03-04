@@ -1,74 +1,173 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { generateAPIUrl } from '@/utils';
+import { useChat } from '@ai-sdk/react';
+import { fetch as expoFetch } from 'expo/fetch';
+import { ScrollView, KeyboardAvoidingView, Platform, Keyboard, SafeAreaView, StatusBar } from 'react-native';
+import { YStack, XStack, Text, Input, Button, View, styled } from 'tamagui';
+import { useEffect, useRef, useState } from 'react';
+import { MessageBubble } from '@/components/ui/MessageBubble';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+// Create a logging utility
+const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[INFO] ${message}`, data || '');
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[ERROR] ${message}`, error || '');
+  }
+};
 
-export default function HomeScreen() {
+export default function App() {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const insets = useSafeAreaInsets();
+  
+  const { messages, error, handleInputChange, input, handleSubmit } = useChat({
+    fetch: expoFetch as unknown as typeof globalThis.fetch,
+    api: generateAPIUrl('/api/chat'),
+    onError: error => {
+      logger.error('Chat error:', error);
+    },
+    onResponse: (response) => {
+      logger.info('Received response:', {
+        status: response.status,
+        statusText: response.statusText,
+      });
+    },
+    onFinish: (message) => {
+      logger.info('Chat completed:', { messageId: message.id, role: message.role });
+      // Scroll to bottom when a new message is finished
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    },
+    maxSteps: 5,
+  });
+
+  // Setup keyboard listeners
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        setKeyboardVisible(true);
+        // Scroll to bottom when keyboard appears
+        setTimeout(() => {
+          scrollViewRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        setKeyboardVisible(false);
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages.length]);
+
+  if (error) return <Text color="$red10">{error.message}</Text>;
+
+  const handleSendMessage = () => {
+    if (!input.trim()) return;
+    
+    logger.info('Sending message:', { content: input });
+    handleSubmit({} as any);
+    // Dismiss keyboard on iOS after sending
+    if (Platform.OS === 'ios') {
+      Keyboard.dismiss();
+    }
+  };
+  
+  // Calculate bottom padding to account for the tab bar and safe area
+  const bottomPadding = Platform.OS === 'ios' ? insets.bottom + 60 : 60; // Add extra for tab bar
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <YStack flex={1} bg="$background">
+      <StatusBar barStyle="dark-content" />
+      
+      {/* Main chat area */}
+      <YStack flex={1} pb={bottomPadding}>
+        <ScrollView
+          style={{ flex: 1 }}
+          ref={scrollViewRef}
+          contentContainerStyle={{ paddingVertical: 16 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <YStack gap="$4">
+            {messages.map(m => (
+              <MessageBubble
+                key={m.id}
+                id={m.id}
+                role={m.role as any}
+                content={m.content || ''}
+                toolInvocations={m.toolInvocations}
+              />
+            ))}
+            {/* Add a spacer at the bottom to ensure content is above the input */}
+            {messages.length > 0 && <View height={60} />}
+          </YStack>
+        </ScrollView>
+      </YStack>
+
+      {/* Input area fixed at bottom */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 0,
+        }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <XStack
+          width="100%"
+          space="$2"
+          p="$4"
+          bg="$background"
+          borderTopWidth={1}
+          borderColor="$borderColor"
+          shadowColor="$shadowColor"
+          shadowOffset={{ width: 0, height: -2 }}
+          shadowOpacity={0.1}
+          shadowRadius={3}
+          elevation={5}
+        >
+          <Input
+            flex={1}
+            size="$4"
+            borderWidth={1}
+            borderColor="$borderColor"
+            placeholder="Type your message..."
+            value={input}
+            onChangeText={(text) => handleInputChange({ target: { value: text } } as any)}
+            onSubmitEditing={handleSendMessage}
+            autoFocus={false}
+          />
+          <Button
+            size="$4"
+            themeInverse
+            onPress={handleSendMessage}
+            disabled={!input.trim()}
+          >
+            Send
+          </Button>
+        </XStack>
+      </KeyboardAvoidingView>
+    </YStack>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});

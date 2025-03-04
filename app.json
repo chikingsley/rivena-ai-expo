@@ -19,10 +19,12 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "server",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "@livekit/react-native-expo-plugin", 
+      "@config-plugins/react-native-webrtc",
       "expo-router",
       [
         "expo-splash-screen",
@@ -36,6 +38,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "19bb242f-751f-424d-a98c-8f2867792637"
+      }
+    },
+    "owner": "simonpeacocks"
   }
 }
