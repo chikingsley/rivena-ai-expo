@@ -18,6 +18,7 @@ import {
   Dimensions,
   Alert
 } from 'react-native';
+import { ToolInvocationRenderer } from '@/components/ToolInvocationRenderer';
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -31,7 +32,7 @@ export default function App() {
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Use the AI SDK's useChat hook for message management
-  const { messages, error, handleInputChange, input, handleSubmit, isLoading } = useChat({
+  const { messages, error, handleInputChange, input, handleSubmit, isLoading, addToolResult } = useChat({
     fetch: expoFetch as unknown as typeof globalThis.fetch,
     api: generateAPIUrl('/api/chat'),
     onError: error => {
@@ -47,6 +48,16 @@ export default function App() {
       setTimeout(() => scrollToBottom(), 100);
     },
     maxSteps: 5,
+    // Add onToolCall handler if you want to automatically handle certain tools
+    async onToolCall({ toolCall }) {
+      // Example of auto-handling a tool
+      if (toolCall.toolName === 'weather') {
+        // You could automatically get the user's location here
+        return { location: 'Auto-detected location', temperature: 72 };
+      }
+      // For other tools, let the UI handle them
+      return undefined;
+    }
   });
 
   // Display error message if there's an error
@@ -216,8 +227,29 @@ export default function App() {
                       fontWeight: m.role === 'user' ? 'normal' : 'normal',
                     }}>
                       {m.parts ? (
-                        <Text>{JSON.stringify(m.parts, null, 2)}</Text>
+                        // Render message parts properly
+                        <View>
+                          {m.parts.map((part, partIndex) => {
+                            switch (part.type) {
+                              case 'text':
+                                return <Text key={partIndex}>{part.text}</Text>;
+
+                              case 'tool-invocation':
+                                return (
+                                  <ToolInvocationRenderer
+                                    key={partIndex}
+                                    toolInvocation={part.toolInvocation}
+                                    addToolResult={addToolResult}
+                                  />
+                                );
+
+                              default:
+                                return <Text key={partIndex}>Unknown part type: {part.type}</Text>;
+                            }
+                          })}
+                        </View>
                       ) : (
+                        // Fallback for messages without parts
                         <Text>{m.content}</Text>
                       )}
                     </Text>
