@@ -11,6 +11,11 @@ import {
   LiveKitRoom
 } from '@livekit/react-native';
 import type { DisconnectReason } from 'livekit-client';
+import type {
+  AudioLevelMonitorProps,
+  UseLocalParticipantResult,
+  UseRoomContextResult
+} from '@/types/livekit';
 
 // Register LiveKit globals
 registerGlobals();
@@ -88,7 +93,7 @@ export default function VoiceScreen() {
           console.log('LiveKit disconnected:', reason);
           setIsConnected(false);
         }}
-        onError={(error) => {
+        onError={(error: Error) => {
           console.error('LiveKit connection error:', error);
         }}
       >
@@ -221,9 +226,9 @@ export default function VoiceScreen() {
 }
 
 // Component to monitor audio levels from LiveKit
-const AudioLevelMonitor = ({ setAudioLevel }) => {
-  const { localParticipant } = useLocalParticipant();
-  const room = useRoomContext();
+const AudioLevelMonitor: React.FC<AudioLevelMonitorProps> = ({ setAudioLevel }) => {
+  const { localParticipant } = useLocalParticipant() as UseLocalParticipantResult;
+  const room = useRoomContext() as UseRoomContextResult;
   
   // Monitor audio levels
   useEffect(() => {
@@ -235,10 +240,10 @@ const AudioLevelMonitor = ({ setAudioLevel }) => {
     console.log('Setting up audio level monitoring for participant:', localParticipant.identity);
     
     // Create simulation for testing UI - working well in the simulator
-    let simInterval;
+    let simInterval: NodeJS.Timeout | undefined;
     
     // Only use simulation if debugging is needed
-    const DEBUG_SIMULATION = false; // Keep enabled for simulator testing
+    const DEBUG_SIMULATION = false; // Set to true for simulator testing
     
     if (DEBUG_SIMULATION) {
       let simLevel = 0;
@@ -263,7 +268,7 @@ const AudioLevelMonitor = ({ setAudioLevel }) => {
     // For real devices, listen to audio level changes
     // For React Native, we'll use direct audioLevel property monitoring
     // rather than room.startAudioLevelMonitor which isn't available
-    let realAudioMonitor;
+    let realAudioMonitor: NodeJS.Timeout | undefined;
     
     if (!DEBUG_SIMULATION) {
       // For real devices, let's try to use the audio level subscription
@@ -287,7 +292,9 @@ const AudioLevelMonitor = ({ setAudioLevel }) => {
       // Also try to subscribe to the audioLevelChanged event if available
       try {
         console.log('Setting up audioLevelChanged event listener');
-        const subscription = room.on('audioLevelChanged', (levels) => {
+        
+        // Define the callback function for the event
+        const audioLevelCallback = (levels: Map<string, number>) => {
           if (DEBUG_SIMULATION) return;
           
           const localLevel = levels.get(localParticipant.sid) || 0;
@@ -300,12 +307,17 @@ const AudioLevelMonitor = ({ setAudioLevel }) => {
           if (localLevel > 0.05) {
             console.log('Audio level changed event detected:', localLevel);
           }
-        });
+        };
+        
+        // Use a more flexible event type that works with React Native's LiveKit
+        const subscription = room.on('audioLevelChanged', audioLevelCallback);
         
         return () => {
           if (simInterval) clearInterval(simInterval);
           if (realAudioMonitor) clearInterval(realAudioMonitor);
-          subscription.dispose();
+          if (subscription && typeof subscription.dispose === 'function') {
+            subscription.dispose();
+          }
         };
       } catch (error) {
         console.log('Error setting up audioLevelChanged listener:', error);
