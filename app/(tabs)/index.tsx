@@ -22,20 +22,16 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 // Get the API URL based on the environment
-const getApiUrl = () => {
-  // For Expo Go, use the development server URL
+const getApiUrl = (endpoint = 'api/chat') => {
+  // For development, use a direct IP address that's most likely to work
   if (__DEV__) {
-    // Get the Expo development server URL
-    const localhost = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-    const devServerUrl = Constants.expoConfig?.hostUri 
-      ? Constants.expoConfig.hostUri.split(':')[0] 
-      : localhost;
-    
-    return `http://${devServerUrl}:3000/api/chat`;
+    // Use a hardcoded IP that matches your development machine
+    // This is more reliable than trying to detect it dynamically
+    return `http://192.168.0.229:8081/${endpoint}`;
   }
   
   // For production, use the deployed URL
-  return 'https://your-production-domain.com/api/chat';
+  return `https://your-production-domain.com/${endpoint}`;
 };
 
 export default function App() {
@@ -77,16 +73,35 @@ export default function App() {
         content: msg.content
       }));
       
-      console.log('Calling API at:', getApiUrl());
+      // First test the hello endpoint
+      try {
+        console.log('Testing hello endpoint...');
+        const helloUrl = getApiUrl('hello');
+        const testResponse = await fetch(helloUrl, { method: 'GET' });
+        
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log('Hello endpoint working:', testData);
+        } else {
+          console.log('Hello endpoint failed with status:', testResponse.status);
+        }
+      } catch (testError) {
+        console.log('Hello endpoint error - continuing anyway');
+      }
       
-      // Call the chat API with the full URL
-      const response = await fetch(getApiUrl(), {
+      // Call the chat API
+      const chatApiUrl = getApiUrl('api/chat');
+      console.log('Calling API at:', chatApiUrl);
+      
+      const response = await fetch(chatApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ messages: apiMessages }),
       });
+      
+      console.log('API response status:', response.status);
       
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);
