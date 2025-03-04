@@ -1,173 +1,291 @@
-import { generateAPIUrl } from '@/utils';
-import { useChat } from '@ai-sdk/react';
-import { fetch as expoFetch } from 'expo/fetch';
-import { ScrollView, KeyboardAvoidingView, Platform, Keyboard, SafeAreaView, StatusBar } from 'react-native';
-import { YStack, XStack, Text, Input, Button, View, styled } from 'tamagui';
-import { useEffect, useRef, useState } from 'react';
-import { MessageBubble } from '@/components/ui/MessageBubble';
+import React, { useState, useRef, useEffect } from 'react';
+import { YStack, Text, Button, Input, XStack } from 'tamagui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { 
+  KeyboardAvoidingView, 
+  Platform, 
+  ScrollView, 
+  View, 
+  StatusBar,
+  Keyboard,
+  TextInput,
+  Animated,
+  LayoutAnimation,
+  UIManager,
+  Dimensions
+} from 'react-native';
 
-// Create a logging utility
-const logger = {
-  info: (message: string, data?: any) => {
-    console.log(`[INFO] ${message}`, data || '');
-  },
-  error: (message: string, error?: any) => {
-    console.error(`[ERROR] ${message}`, error || '');
-  }
-};
+// Enable LayoutAnimation for Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function App() {
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-  const scrollViewRef = useRef<ScrollView>(null);
+  // Get safe area insets to handle notch
   const insets = useSafeAreaInsets();
   
-  const { messages, error, handleInputChange, input, handleSubmit } = useChat({
-    fetch: expoFetch as unknown as typeof globalThis.fetch,
-    api: generateAPIUrl('/api/chat'),
-    onError: error => {
-      logger.error('Chat error:', error);
-    },
-    onResponse: (response) => {
-      logger.info('Received response:', {
-        status: response.status,
-        statusText: response.statusText,
-      });
-    },
-    onFinish: (message) => {
-      logger.info('Chat completed:', { messageId: message.id, role: message.role });
-      // Scroll to bottom when a new message is finished
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    },
-    maxSteps: 5,
-  });
+  // Ref for ScrollView to enable auto-scrolling
+  const scrollViewRef = useRef<ScrollView>(null);
+  
+  // Simple state management for a basic chat
+  const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
+  const [input, setInput] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [inputHeight, setInputHeight] = useState(64); // Default input container height
 
-  // Setup keyboard listeners
+  // Simple send function 
+  const handleSend = () => {
+    if (!input.trim()) return;
+    
+    // Add user message
+    setMessages([...messages, { role: 'user', content: input }]);
+    
+    // Clear input
+    setInput('');
+    
+    // Simulate AI response after a short delay
+    setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `You said: "${input}". This is a simple echo response.` 
+      }]);
+    }, 1000);
+  };
+
+  // Configure smooth layout animations
+  const configureAnimation = () => {
+    LayoutAnimation.configureNext({
+      duration: 0,
+      create: { 
+        type: LayoutAnimation.Types.easeInEaseOut,
+        property: LayoutAnimation.Properties.opacity,
+      },
+      update: { 
+        type: LayoutAnimation.Types.easeInEaseOut,
+      },
+    });
+  };
+
+  // Keyboard listeners to adjust UI when keyboard appears/disappears
   useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => {
+    const keyboardWillShowListener = Platform.OS === 'ios' ? 
+      Keyboard.addListener('keyboardWillShow', (event) => {
+        configureAnimation();
         setKeyboardVisible(true);
-        // Scroll to bottom when keyboard appears
-        setTimeout(() => {
-          scrollViewRef.current?.scrollToEnd({ animated: true });
-        }, 100);
-      }
-    );
-    const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => {
+        setKeyboardHeight(event.endCoordinates.height);
+        scrollToBottom();
+      }) : 
+      Keyboard.addListener('keyboardDidShow', (event) => {
+        configureAnimation();
+        setKeyboardVisible(true);
+        setKeyboardHeight(event.endCoordinates.height);
+        scrollToBottom();
+      });
+    
+    const keyboardWillHideListener = Platform.OS === 'ios' ? 
+      Keyboard.addListener('keyboardWillHide', () => {
+        configureAnimation();
         setKeyboardVisible(false);
-      }
-    );
+        setKeyboardHeight(0);
+      }) : 
+      Keyboard.addListener('keyboardDidHide', () => {
+        configureAnimation();
+        setKeyboardVisible(false);
+        setKeyboardHeight(0);
+      });
 
+    // Clean up listeners
     return () => {
-      keyboardDidHideListener.remove();
-      keyboardDidShowListener.remove();
+      keyboardWillShowListener.remove();
+      keyboardWillHideListener.remove();
     };
   }, []);
 
-  // Scroll to bottom when messages change
+  // Auto-scroll when new messages are added
   useEffect(() => {
     if (messages.length > 0) {
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      scrollToBottom();
     }
   }, [messages.length]);
 
-  if (error) return <Text color="$red10">{error.message}</Text>;
-
-  const handleSendMessage = () => {
-    if (!input.trim()) return;
-    
-    logger.info('Sending message:', { content: input });
-    handleSubmit({} as any);
-    // Dismiss keyboard on iOS after sending
-    if (Platform.OS === 'ios') {
-      Keyboard.dismiss();
-    }
+  // Function to scroll to bottom of ScrollView
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollToEnd({ animated: true });
+      }
+    }, 100);
   };
-  
-  // Calculate bottom padding to account for the tab bar and safe area
-  const bottomPadding = Platform.OS === 'ios' ? insets.bottom + 60 : 60; // Add extra for tab bar
+
+  // Calculate the bottom padding to account for the tab bar
+  const tabBarHeight = Platform.OS === 'ios' ? (keyboardVisible ? 0 : insets.bottom + 49) : 49;
+
+  // Calculate the content container height - leave more space for the input
+  const windowHeight = Dimensions.get('window').height;
+  const headerHeight = keyboardVisible ? 0 : 64; // Estimated header height
+  const safeInputHeight = inputHeight + 20; // Add extra padding for safety
+  const contentHeight = windowHeight - insets.top - headerHeight - (keyboardVisible ? keyboardHeight : tabBarHeight);
 
   return (
-    <YStack flex={1} bg="$background">
+    <View style={{ 
+      flex: 1, 
+      backgroundColor: '#FFFFFF',
+    }}>
       <StatusBar barStyle="dark-content" />
       
-      {/* Main chat area */}
-      <YStack flex={1} pb={bottomPadding}>
-        <ScrollView
-          style={{ flex: 1 }}
-          ref={scrollViewRef}
-          contentContainerStyle={{ paddingVertical: 16 }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <YStack gap="$4">
-            {messages.map(m => (
-              <MessageBubble
-                key={m.id}
-                id={m.id}
-                role={m.role as any}
-                content={m.content || ''}
-                toolInvocations={m.toolInvocations}
-              />
-            ))}
-            {/* Add a spacer at the bottom to ensure content is above the input */}
-            {messages.length > 0 && <View height={60} />}
-          </YStack>
-        </ScrollView>
-      </YStack>
-
-      {/* Input area fixed at bottom */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          paddingBottom: Platform.OS === 'ios' ? insets.bottom : 0,
-        }}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-      >
-        <XStack
-          width="100%"
-          space="$2"
-          p="$4"
-          bg="$background"
-          borderTopWidth={1}
-          borderColor="$borderColor"
-          shadowColor="$shadowColor"
-          shadowOffset={{ width: 0, height: -2 }}
-          shadowOpacity={0.1}
-          shadowRadius={3}
-          elevation={5}
-        >
-          <Input
-            flex={1}
-            size="$4"
-            borderWidth={1}
-            borderColor="$borderColor"
-            placeholder="Type your message..."
-            value={input}
-            onChangeText={(text) => handleInputChange({ target: { value: text } } as any)}
-            onSubmitEditing={handleSendMessage}
-            autoFocus={false}
-          />
-          <Button
-            size="$4"
-            themeInverse
-            onPress={handleSendMessage}
-            disabled={!input.trim()}
+      {/* Content container with safe area padding */}
+      <View style={{
+        flex: 1,
+        paddingTop: insets.top,
+        paddingHorizontal: 16,
+      }}>
+        {/* Header - only show when keyboard is not visible */}
+        {!keyboardVisible && (
+          <View style={{ 
+            marginBottom: 20,
+            height: headerHeight,
+            justifyContent: 'center',
+          }}>
+            <Text style={{ 
+              fontSize: 24, 
+              fontWeight: 'bold', 
+              color: '#333333',
+              textAlign: 'center'
+            }}>
+              Simple Chat
+            </Text>
+          </View>
+        )}
+        
+        {/* Main content area with messages */}
+        <View style={{ 
+          height: contentHeight,
+          position: 'relative',
+        }}>
+          {/* Messages area with ScrollView */}
+          <ScrollView 
+            ref={scrollViewRef}
+            style={{ 
+              flex: 1,
+            }}
+            contentContainerStyle={{ 
+              paddingBottom: safeInputHeight + 0, // Reduced padding to eliminate gap
+            }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={true}
           >
-            Send
-          </Button>
-        </XStack>
-      </KeyboardAvoidingView>
-    </YStack>
+            <View>
+              {messages.length === 0 ? (
+                <View style={{
+                  padding: 20,
+                  backgroundColor: '#f0f0f0',
+                  borderRadius: 8,
+                  marginVertical: 10,
+                  opacity: keyboardVisible ? 0.5 : 1, // Fade when keyboard is visible
+                }}>
+                  <Text style={{ 
+                    color: '#666666', 
+                    fontSize: 16, 
+                    textAlign: 'center',
+                  }}>
+                    Send a message to start chatting
+                  </Text>
+                </View>
+              ) : (
+                messages.map((message, index) => (
+                  <View 
+                    key={index} 
+                    style={{
+                      marginVertical: 4, // Further reduced vertical margin
+                      padding: 12,
+                      borderRadius: 12,
+                      backgroundColor: message.role === 'user' ? '#e1f5fe' : '#e8f5e9',
+                      borderWidth: 1,
+                      borderColor: message.role === 'user' ? '#bbdefb' : '#c8e6c9',
+                      alignSelf: message.role === 'user' ? 'flex-end' : 'flex-start',
+                      maxWidth: '80%',
+                    }}
+                  >
+                    <Text style={{ 
+                      color: '#333333', 
+                      fontWeight: message.role === 'user' ? 'bold' : 'normal',
+                    }}>
+                      {message.content}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </View>
+          </ScrollView>
+        </View>
+
+        {/* Input area - positioned at the bottom but not fixed */}
+        <View 
+          style={{
+            position: 'absolute',
+            bottom: keyboardVisible ? keyboardHeight : tabBarHeight,
+            left: 0,
+            right: 0,
+            paddingHorizontal: 16,
+            backgroundColor: '#FFFFFF',
+            borderTopWidth: 1,
+            borderTopColor: '#eeeeee',
+            zIndex: 10, // Ensure input is above other elements
+          }}
+          onLayout={(event) => {
+            // Update input height when it changes
+            const { height } = event.nativeEvent.layout;
+            if (height !== inputHeight) {
+              setInputHeight(height);
+            }
+          }}
+        >
+          <View style={{
+            flexDirection: 'row',
+            marginVertical: 8,
+            backgroundColor: '#f5f5f5',
+            padding: 8,
+            borderRadius: 20,
+          }}>
+            <TextInput
+              style={{
+                flex: 1,
+                paddingHorizontal: 12,
+                height: 40,
+                backgroundColor: 'white',
+                borderColor: '#dddddd',
+                borderWidth: 1,
+                borderRadius: 20,
+                color: '#333333',
+                fontSize: 16,
+              }}
+              placeholder="Type a message..."
+              placeholderTextColor="#999999"
+              value={input}
+              onChangeText={setInput}
+              onSubmitEditing={handleSend}
+            />
+            <Button 
+              style={{
+                marginLeft: 8,
+                height: 40,
+                paddingHorizontal: 16,
+                backgroundColor: '#2196f3',
+                borderRadius: 20,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+              onPress={handleSend} 
+              disabled={!input.trim()}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>
+                Send
+              </Text>
+            </Button>
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }

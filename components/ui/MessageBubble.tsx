@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Text, Paragraph, YStack, XStack, Theme, Avatar } from 'tamagui';
+import { Card, Text, Paragraph, YStack, XStack, Theme, Avatar, ThemeName } from 'tamagui';
 
 type MessageRole = 'user' | 'assistant' | 'system';
 
@@ -14,14 +14,15 @@ export const MessageBubble = ({ id, role, content, toolInvocations }: MessagePro
   // Determine color and alignment based on role
   const isUser = role === 'user';
   
-  const getRoleTheme = (): string => {
+  const getRoleTheme = (): ThemeName => {
     switch (role) {
       case 'user':
         return 'blue';
       case 'assistant':
         return 'green';
       case 'system':
-        return 'gray';
+        // Gray may not be a valid ThemeName, defaulting to a valid theme
+        return 'yellow';
       default:
         return 'blue';
     }
@@ -49,7 +50,7 @@ export const MessageBubble = ({ id, role, content, toolInvocations }: MessagePro
       width="100%"
       px="$2"
     >
-      <Theme name={isUser ? 'blue' : 'green'}>
+      <Theme name={themeColor}>
         <XStack 
           width="85%"
           gap="$2"
@@ -71,8 +72,8 @@ export const MessageBubble = ({ id, role, content, toolInvocations }: MessagePro
             size="$4"
             bordered
             animation="quick"
-            backgroundColor="red"
-            borderColor="blue"
+            backgroundColor="$background"
+            borderColor="$borderColor"
             borderRadius="$4"
             borderTopRightRadius={isUser ? '$1' : '$4'}
             borderTopLeftRadius={isUser ? '$4' : '$1'}
@@ -80,7 +81,7 @@ export const MessageBubble = ({ id, role, content, toolInvocations }: MessagePro
             <Card.Header px="$3" pt="$2" pb="$1">
               <Text 
                 textTransform="capitalize" 
-                color="white"
+                color="$color"
                 fontWeight="bold"
                 fontSize="$2"
               >
@@ -90,11 +91,11 @@ export const MessageBubble = ({ id, role, content, toolInvocations }: MessagePro
             
             <Card.Footer px="$3" pt="$1" pb="$3">
               {toolInvocations ? (
-                <Paragraph fontFamily="$body" size="$3" lineHeight="$1">
+                <Paragraph fontFamily="$body" size="$3" lineHeight="$1" color="$color">
                   {JSON.stringify(toolInvocations, null, 2)}
                 </Paragraph>
               ) : (
-                <Paragraph fontFamily="$body" size="$3" lineHeight="$1">
+                <Paragraph fontFamily="$body" size="$3" lineHeight="$1" color="$color">
                   {content}
                 </Paragraph>
               )}
