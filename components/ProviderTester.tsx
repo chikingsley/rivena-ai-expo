@@ -1,12 +1,11 @@
 // components/ProviderTester.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View, ActivityIndicator } from 'react-native';
 import { createOpenAIVoiceProvider } from '../providers/openai-voice';
 import { createHumeVoiceProvider } from '../providers/hume-voice';
 import type { VoiceProvider, VoiceProviderState } from '../providers/base/VoiceProvider';
 import { generateAPIUrl } from '../lib/generateApiUrl';
 import { Button, Card, Text } from '@/components/ui';
-import { YStack, XStack, Spinner } from 'tamagui';
 
 // Create a logger function that logs to both console and UI with better formatting
 const createLogger = (setMessages: React.Dispatch<React.SetStateAction<string[]>>) => {
@@ -92,17 +91,17 @@ interface ProviderTesterProps {
 
 // Get connection button color based on state
 const getConnectionButtonColor = (state: VoiceProviderState) => {
-    if (state === 'connected') return 'red';
-    return 'green';
+    if (state === 'connected') return 'bg-red-500';
+    return 'bg-green-500';
 };
 
 // Get text color based on state
 const getStateTextColor = (state: VoiceProviderState) => {
     switch (state) {
-        case 'connected': return 'green';
-        case 'error': return 'red';
-        case 'connecting': return 'orange';
-        default: return 'gray';
+        case 'connected': return 'text-green-500';
+        case 'error': return 'text-red-500';
+        case 'connecting': return 'text-orange-500';
+        default: return 'text-gray-500';
     }
 };
 
@@ -279,80 +278,75 @@ export default function ProviderTester({
     };
 
     return (
-        <YStack flex={1}>
-            <Card elevate bordered padding="$4" marginBottom="$4">
-                <YStack space="$3">
-                    <XStack space="$3" alignItems="center">
-                        <Text fontSize="$4" fontWeight="bold">Status:</Text>
+        <View className="flex flex-1 flex-col">
+            <Card className="p-4 mb-4">
+                <View className="flex flex-col space-y-3">
+                    <View className="flex flex-row items-center space-x-3">
+                        <Text className="text-lg font-bold">Status:</Text>
                         <Text 
-                            fontSize="$4"
-                            color={getStateTextColor(state)}
+                            className={`text-lg ${getStateTextColor(state)}`}
                         >
                             {state.charAt(0).toUpperCase() + state.slice(1)}
                         </Text>
-                    </XStack>
+                    </View>
 
                     {error && (
-                        <Text fontSize="$3" color="red">
+                        <Text className="text-base text-red-500">
                             Error: {error}
                         </Text>
                     )}
 
-                    <XStack space="$3" flexWrap="wrap">
+                    <View className="flex flex-row flex-wrap space-x-3">
                         {providerType === 'openai' && (
                             <Button 
                                 onPress={testServerConnection}
                                 disabled={isLoading}
-                                backgroundColor="blue"
-                                marginVertical="$1"
+                                className="bg-blue-500 my-1"
                             >
-                                {isLoading ? <Spinner /> : 'Test Connection'}
+                                {isLoading ? <ActivityIndicator size="small" color="#ffffff" /> : 'Test Connection'}
                             </Button>
                         )}
 
                         <Button 
                             onPress={toggleConnection}
                             disabled={isLoading || state === 'connecting'}
-                            backgroundColor={getConnectionButtonColor(state)}
-                            marginVertical="$1"
+                            className={`my-1 ${getConnectionButtonColor(state)}`}
                         >
-                            {isLoading ? <Spinner /> : getConnectionButtonText()}
+                            {isLoading ? <ActivityIndicator size="small" color="#ffffff" /> : getConnectionButtonText()}
                         </Button>
 
                         {uiConfig.showSendAudioButton && (
                             <Button 
                                 onPress={handleSendTestAudio}
                                 disabled={isLoading || state !== 'connected'}
-                                backgroundColor="purple"
-                                marginVertical="$1"
+                                className="bg-purple-500 my-1"
                             >
-                                {isLoading ? <Spinner /> : 'Send Test Audio'}
+                                {isLoading ? <ActivityIndicator size="small" color="#ffffff" /> : 'Send Test Audio'}
                             </Button>
                         )}
 
                         <Button 
                             onPress={clearLogs}
-                            backgroundColor="gray"
-                            marginVertical="$1"
+                            className="bg-gray-500 my-1"
                         >
                             Clear Logs
                         </Button>
-                    </XStack>
-                </YStack>
+                    </View>
+                </View>
             </Card>
 
-            <Card flex={1} elevate bordered padding="$4">
-                <Text fontSize="$4" fontWeight="bold" marginBottom="$2">
+            <Card className="flex-1 p-4">
+                <Text className="text-lg font-bold mb-2">
                     Event Log:
                 </Text>
                 <ScrollView style={{ flex: 1 }}>
                     {messages.map((msg, i) => (
-                        <Text key={i} fontSize="$2" marginBottom="$1">
+                        <Text key={i} className="text-sm mb-1">
                             {msg}
                         </Text>
                     ))}
                 </ScrollView>
             </Card>
-        </YStack>
+        </View>
     );
 }
