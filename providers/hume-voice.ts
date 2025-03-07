@@ -5,25 +5,36 @@ import {
     VoiceProviderConfig,
     AudioChunk
 } from './base/VoiceProvider';
-import { convertBlobToBase64, convertBase64ToBlob, HumeClient } from 'hume';
+import {
+    HumeClient,
+    convertBlobToBase64,
+    convertBase64ToBlob
+    // Commented out for now, will use later
+    // getBrowserSupportedMimeType,
+    // getAudioStream,
+    // ensureSingleValidAudioTrack,
+    // MimeType
+} from 'hume';
+import { Platform } from 'react-native';
+import { getHumeAccessToken } from '../lib/getHumeAccessToken';
+
+// For React Native audio handling
+interface AudioData {
+    type: string;
+    base64Data: string;
+}
 
 // Configuration validation
 const configId = process.env.EXPO_PUBLIC_HUME_CONFIG_ID;
-const apiKey = process.env.EXPO_PUBLIC_HUME_API_KEY;
-const secretKey = process.env.EXPO_PUBLIC_HUME_SECRET_KEY;
-
-if (!apiKey || !secretKey) {
-    throw new Error('HUME_API_KEY and HUME_SECRET_KEY must be set in environment variables');
-}
 
 export interface HumeVoiceConfig extends VoiceProviderConfig {
-    configId?: string; // Optional - use env var if not provided
+    configId?: string;
 }
 
 export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoiceProvider => {
     let client: HumeClient | null = null;
-    let socket: any = null; // Will be properly typed when connected
-    let state: VoiceProviderState = 'disconnected';
+    let socket: any = null;
+    let currentState: VoiceProviderState = 'disconnected';
     let config: HumeVoiceConfig = {
         audioFormat: 'webm',
         reconnectAttempts: 5,
@@ -33,7 +44,20 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
     let reconnectCount = 0;
     let reconnectTimeout: NodeJS.Timeout | null = null;
 
-    // Event listeners management (same as in OpenAI provider)
+    // Commented out for now, will use later
+    // let audioStream: MediaStream | null = null;
+    // let recorder: MediaRecorder | null = null;
+    // const mimeType = (() => {
+    //     const result = getBrowserSupportedMimeType();
+    //     return result.success ? result.mimeType : MimeType.WEBM;
+    // })();
+
+    // Audio playback queue
+    const audioQueue: Blob[] = [];
+    let isPlaying = false;
+    let currentAudio: HTMLAudioElement | null = null;
+
+    // Event listeners management
     const eventListeners: {
         [K in keyof VoiceProviderEvents]?: VoiceProviderEvents[K][];
     } = {
@@ -44,7 +68,6 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
         audioLevel: []
     };
 
-    // Helper function to emit events (same as in OpenAI provider)
     const emit = <K extends keyof VoiceProviderEvents>(
         event: K,
         ...args: Parameters<VoiceProviderEvents[K]>
@@ -60,50 +83,141 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
         });
     };
 
-    // Helper to update state (same as in OpenAI provider)
     const setState = (newState: VoiceProviderState) => {
-        if (state !== newState) {
-            state = newState;
+        if (currentState !== newState) {
+            currentState = newState;
             emit('stateChange', newState);
         }
     };
 
-    // Connect to Hume's EVI WebSocket
+    // Audio playback functions
+    const playAudio = () => {
+        if (!audioQueue.length || isPlaying) return;
+
+        isPlaying = true;
+        const audioBlob = audioQueue.shift();
+        if (!audioBlob) return;
+
+        try {
+            const audioUrl = URL.createObjectURL(audioBlob);
+            currentAudio = new Audio(audioUrl);
+
+            currentAudio.play().catch(error => {
+                console.error('Error playing audio:', error);
+                isPlaying = false;
+                if (audioQueue.length) playAudio();
+            });
+
+            currentAudio.onended = () => {
+                isPlaying = false;
+                if (audioQueue.length) playAudio();
+            };
+        } catch (error) {
+            console.error('Error creating audio element:', error);
+            isPlaying = false;
+            if (audioQueue.length) playAudio();
+        }
+    };
+
+    const stopAudio = () => {
+        if (currentAudio) {
+            try {
+                currentAudio.pause();
+            } catch (error) {
+                console.error('Error stopping audio:', error);
+            }
+            currentAudio = null;
+        }
+        isPlaying = false;
+        audioQueue.length = 0;
+    };
+
+    // Commented out for now, will use later
+    /*
+    // Start recording audio
+    const startRecording = async () => {
+        try {
+            audioStream = await getAudioStream();
+            ensureSingleValidAudioTrack(audioStream);
+
+            recorder = new MediaRecorder(audioStream, { mimeType });
+            recorder.ondataavailable = async ({ data }) => {
+                if (data.size < 1) return;
+                
+                const encodedAudioData = await convertBlobToBase64(data);
+                socket?.sendAudioInput({ data: encodedAudioData });
+            };
+
+            // Capture audio input at 100ms intervals (recommended for web)
+            recorder.start(100);
+        } catch (error) {
+            console.error('Error starting recording:', error);
+            emit('error', error instanceof Error ? error : new Error('Failed to start recording'));
+        }
+    };
+
+    const stopRecording = () => {
+        recorder?.stop();
+        audioStream?.getTracks().forEach(track => track.stop());
+        recorder = null;
+        audioStream = null;
+    };
+    */
+
     const connect = async (): Promise<void> => {
-        if (state === 'connected' || state === 'connecting') {
+        if (currentState === 'connected' || currentState === 'connecting') {
             return;
         }
 
         setState('connecting');
 
         try {
-            // Initialize Hume client
+            // Get access token for client-side authentication
+            const accessToken = await getHumeAccessToken();
+
+            if (!accessToken) {
+                throw new Error('Failed to get Hume access token');
+            }
+
+            // Initialize Hume client with access token
             client = new HumeClient({
-                apiKey: apiKey || '',
-                secretKey: secretKey || '',
+                accessToken
             });
 
             // Connect to the Hume EVI WebSocket
             socket = await client.empathicVoice.chat.connect({
                 configId: config.configId || configId || undefined,
-                verboseTranscription: true, // Better for interruption handling
+                verboseTranscription: true
             });
 
-            // Setup event handlers
             socket.on('open', () => {
                 reconnectCount = 0;
                 setState('connected');
                 console.log('Connected to Hume EVI WebSocket');
+
+                // Send a simple text message to initialize the chat
+                try {
+                    // The SDK's sendUserInput method takes a simple string
+                    socket.sendUserInput("Hello");
+
+                    // Also try sending session settings separately
+                    socket.sendSessionSettings({
+                        type: "session_settings",
+                        variables: {
+                            datetime: new Date().toISOString()
+                        }
+                    });
+                } catch (error) {
+                    console.error('Error sending initial message:', error);
+                }
             });
 
             socket.on('message', (message: any) => {
                 try {
-                    // Handle different Hume message types
                     switch (message.type) {
                         case 'user_message':
-                            // Forward user message (transcription) to our components
-                            emit('message', { 
-                                type: 'user_message', 
+                            emit('message', {
+                                type: 'user_message',
                                 content: {
                                     text: message.message?.content || '',
                                     prosody: message.models?.prosody?.scores || {}
@@ -112,39 +226,54 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
                             break;
 
                         case 'assistant_message':
-                            // Forward assistant message to our components
-                            emit('message', { 
-                                type: 'assistant_message', 
+                            emit('message', {
+                                type: 'assistant_message',
                                 content: message.message?.content || ''
                             });
                             break;
 
                         case 'audio_output':
-                            // Process and emit audio data
                             if (message.data) {
-                                const audioBlob = convertBase64ToBlob(message.data);
-                                emit('audioOutput', audioBlob);
+                                try {
+                                    // Handle differently based on platform
+                                    if (Platform.OS === 'web') {
+                                        // For web, use the SDK's convertBase64ToBlob
+                                        const audioBlob = convertBase64ToBlob(message.data);
+                                        emit('audioOutput', audioBlob);
+
+                                        // Add to queue for playback
+                                        audioQueue.push(audioBlob);
+                                        if (audioQueue.length === 1) playAudio();
+                                    } else {
+                                        // For React Native, just emit the base64 data
+                                        // We'll handle it differently in the consumer
+                                        emit('audioOutput', {
+                                            type: 'audio/webm',
+                                            base64Data: message.data
+                                        } as unknown as Blob);
+                                    }
+                                } catch (error) {
+                                    console.error('Error processing audio output:', error);
+                                }
                             }
                             break;
 
                         case 'error':
-                            // Handle errors
                             emit('error', new Error(message.message || 'Unknown Hume error'));
                             break;
 
                         case 'user_interruption':
-                            // Notify of user interruption
-                            emit('message', { 
-                                type: 'interrupt', 
-                                content: 'User interrupted' 
+                            stopAudio();
+                            emit('message', {
+                                type: 'interrupt',
+                                content: 'User interrupted'
                             });
                             break;
 
                         default:
-                            // Forward other messages
-                            emit('message', { 
-                                type: message.type, 
-                                content: message 
+                            emit('message', {
+                                type: message.type,
+                                content: message
                             });
                     }
                 } catch (error) {
@@ -156,29 +285,22 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
             socket.on('error', (error: any) => {
                 console.error('Hume WebSocket error:', error);
                 emit('error', new Error('WebSocket connection error'));
-
-                if (state !== 'error') {
-                    setState('error');
-                }
+                setState('error');
             });
 
             socket.on('close', () => {
-                if (state !== 'disconnected') {
-                    // If not intentionally disconnected, try to reconnect
+                // Commented out for now, will use later
+                // stopRecording();
+
+                if (currentState !== 'disconnected') {
                     if (reconnectCount < (config.reconnectAttempts || 5)) {
                         setState('reconnecting');
-
-                        // Exponential backoff for reconnect
                         const delay = Math.min(
                             (config.reconnectInterval || 1000) * Math.pow(1.5, reconnectCount),
-                            30000 // Max 30 second delay
+                            30000
                         );
-
                         reconnectCount++;
-
-                        reconnectTimeout = setTimeout(() => {
-                            reconnect();
-                        }, delay);
+                        reconnectTimeout = setTimeout(reconnect, delay);
                     } else {
                         setState('error');
                         emit('error', new Error(`WebSocket closed after ${reconnectCount} reconnect attempts`));
@@ -193,46 +315,48 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
         }
     };
 
-    // Disconnect from the WebSocket
     const disconnect = async (): Promise<void> => {
-        // Clear any pending reconnect
         if (reconnectTimeout) {
             clearTimeout(reconnectTimeout);
             reconnectTimeout = null;
         }
 
+        // Commented out for now, will use later
+        // stopRecording();
+        stopAudio();
+
         if (socket) {
-            // Only change state if we're actually connected
-            if (state !== 'disconnected') {
+            if (currentState !== 'disconnected') {
                 setState('disconnected');
             }
 
-            socket.disconnect();
+            try {
+                await socket.close();
+            } catch (error) {
+                console.error('Error disconnecting socket:', error);
+            }
+
             socket = null;
         }
 
         client = null;
     };
 
-    // Attempt to reconnect
     const reconnect = async (): Promise<void> => {
         await disconnect();
         await connect();
     };
 
-    // Send audio data to Hume
     const sendAudio = async (chunk: AudioChunk): Promise<void> => {
-        if (!socket || state !== 'connected') {
+        if (!socket || currentState !== 'connected') {
             throw new Error('WebSocket not connected');
         }
 
         try {
-            // Convert blob to base64
             const base64Data = await convertBlobToBase64(chunk.data);
-
-            // Send to Hume WebSocket using their API format
-            socket.sendAudioInput({ 
-                data: base64Data 
+            socket.sendAudioInput({
+                data: base64Data,
+                timestamp: new Date().toISOString()
             });
         } catch (error) {
             console.error('Error sending audio to Hume:', error);
@@ -240,52 +364,52 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
         }
     };
 
-    // Interrupt the current response
     const interrupt = async (): Promise<void> => {
-        if (!socket || state !== 'connected') {
+        if (!socket || currentState !== 'connected') {
             return;
         }
 
         try {
-            // Hume has specific interruption handling - just making noise
-            // is enough to cause interruption, but we can also send a specific message
-            socket.sendInterruption();
+            socket.sendInterrupt();
         } catch (error) {
-            console.error('Error sending interrupt to Hume:', error);
+            console.error('Error interrupting:', error);
         }
     };
 
-    // Update provider configuration
     const updateConfig = (newConfig: Partial<HumeVoiceConfig>): void => {
         config = { ...config, ...newConfig };
     };
 
-    // Return the public interface (same shape as OpenAI provider)
+    const addEventListener = <K extends keyof VoiceProviderEvents>(
+        event: K,
+        listener: VoiceProviderEvents[K]
+    ): void => {
+        if (!eventListeners[event]) {
+            eventListeners[event] = [];
+        }
+        eventListeners[event]?.push(listener);
+    };
+
+    const removeEventListener = <K extends keyof VoiceProviderEvents>(
+        event: K,
+        listener: VoiceProviderEvents[K]
+    ): void => {
+        if (!eventListeners[event]) return;
+        const index = eventListeners[event]?.indexOf(listener) ?? -1;
+        if (index > -1) {
+            eventListeners[event]?.splice(index, 1);
+        }
+    };
+
     return {
         connect,
         disconnect,
-        reconnect,
         sendAudio,
         interrupt,
-        getState: () => state,
-        addEventListener: <K extends keyof VoiceProviderEvents>(
-            event: K,
-            listener: VoiceProviderEvents[K]
-        ) => {
-            if (!eventListeners[event]) {
-                eventListeners[event] = [];
-            }
-            eventListeners[event]?.push(listener);
-        },
-        removeEventListener: <K extends keyof VoiceProviderEvents>(
-            event: K,
-            listener: VoiceProviderEvents[K]
-        ) => {
-            const listeners = eventListeners[event];
-            if (listeners) {
-                eventListeners[event] = listeners.filter(l => l !== listener) as typeof listeners;
-            }
-        },
-        updateConfig
+        updateConfig,
+        addEventListener,
+        removeEventListener,
+        getState: () => currentState,
+        reconnect
     };
 }; 

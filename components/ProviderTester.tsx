@@ -1,10 +1,11 @@
 // components/ProviderTester.tsx
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Button, StyleSheet, ScrollView, Platform } from 'react-native';
+import { ScrollView } from 'react-native';
 import { createOpenAIVoiceProvider } from '../providers/openai-voice';
 import { createHumeVoiceProvider } from '../providers/hume-voice';
 import type { VoiceProvider, VoiceProviderState } from '../providers/base/VoiceProvider';
 import { generateAPIUrl } from '../lib/utils';
+import { YStack, XStack, Button, Text, Card, Spinner } from 'tamagui';
 
 // Create a logger function that logs to both console and UI with better formatting
 const createLogger = (setMessages: React.Dispatch<React.SetStateAction<string[]>>) => {
@@ -41,7 +42,7 @@ const createLogger = (setMessages: React.Dispatch<React.SetStateAction<string[]>
                 }
             }
             return JSON.stringify(obj, null, 2);
-        } catch (e) {
+        } catch (error) {
             return String(obj);
         }
     };
@@ -49,35 +50,29 @@ const createLogger = (setMessages: React.Dispatch<React.SetStateAction<string[]>
     return {
         log: (message: string) => {
             console.log(`[ProviderTester] ${message}`);
-            setMessages(prev => [...prev, `[${new Date().toISOString()}] ${message}`]);
+            setMessages(prev => [...prev, `[ProviderTester] ${message}`]);
         },
         error: (message: string) => {
             console.error(`[ProviderTester ERROR] ${message}`);
-            setMessages(prev => [...prev, `[${new Date().toISOString()}] ERROR: ${message}`]);
+            setMessages(prev => [...prev, `[ProviderTester ERROR] ${message}`]);
         },
-        warn: (message: string) => {
-            console.warn(`[ProviderTester WARNING] ${message}`);
-            setMessages(prev => [...prev, `[${new Date().toISOString()}] WARNING: ${message}`]);
-        },
-        debug: (message: string) => {
-            console.debug(`[ProviderTester DEBUG] ${message}`);
-            // Optionally add to UI if you want verbose logs
-            // setMessages(prev => [...prev, `[${new Date().toISOString()}] DEBUG: ${message}`]);
-        },
-        // Log response data with cleaning
-        response: (title: string, data: any) => {
-            if (typeof data === 'string') {
-                const cleaned = cleanResponseText(data);
-                console.log(`[ProviderTester RESPONSE] ${title}:\n${cleaned}`);
+        response: (title: string, content: any) => {
+            let formattedContent: string;
+            
+            // Format content based on type
+            if (typeof content === 'string') {
+                formattedContent = cleanResponseText(content);
             } else {
                 try {
-                    // For objects, try to stringify with formatting
-                    console.log(`[ProviderTester RESPONSE] ${title}:\n${formatJSON(data)}`);
+                    // For objects, pretty print as JSON
+                    formattedContent = formatJSON(content);
                 } catch (e) {
-                    console.log(`[ProviderTester RESPONSE] ${title}: [Complex data]`);
+                    formattedContent = String(content);
                 }
             }
-            setMessages(prev => [...prev, `[${new Date().toISOString()}] ${title} received`]);
+            
+            console.log(`[ProviderTester RESPONSE] ${title}:`, content);
+            setMessages(prev => [...prev, `[ProviderTester RESPONSE] ${title}: ${formattedContent}`]);
         },
         clearLogs: () => {
             setMessages([]);
@@ -88,12 +83,39 @@ const createLogger = (setMessages: React.Dispatch<React.SetStateAction<string[]>
 // Provider Tester props
 interface ProviderTesterProps {
     providerType?: 'openai' | 'hume';
+    uiConfig?: {
+        showSendAudioButton?: boolean;
+        useToggleButton?: boolean;
+    };
 }
 
-export default function ProviderTester({ providerType = 'openai' }: ProviderTesterProps) {
+// Get connection button color based on state
+const getConnectionButtonColor = (state: VoiceProviderState) => {
+    if (state === 'connected') return 'red';
+    return 'green';
+};
+
+// Get text color based on state
+const getStateTextColor = (state: VoiceProviderState) => {
+    switch (state) {
+        case 'connected': return 'green';
+        case 'error': return 'red';
+        case 'connecting': return 'orange';
+        default: return 'gray';
+    }
+};
+
+export default function ProviderTester({ 
+    providerType = 'openai',
+    uiConfig = {
+        showSendAudioButton: true,
+        useToggleButton: false
+    }
+}: ProviderTesterProps) {
     const [state, setState] = useState<VoiceProviderState>('disconnected');
     const [messages, setMessages] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
     const providerRef = useRef<VoiceProvider | null>(null);
     
     // Create logger
@@ -130,6 +152,7 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
         // Listen for state changes
         provider.addEventListener('stateChange', (newState) => {
             setState(newState);
+            setIsLoading(false);
             logger.log(`State changed to: ${newState}`);
         });
 
@@ -145,6 +168,7 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
         // Listen for errors
         provider.addEventListener('error', (err) => {
             setError(err.message);
+            setIsLoading(false);
             logger.error(`Error: ${err.message}`);
         });
 
@@ -162,23 +186,26 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
         };
     }, [providerType]);
 
-    // Handle connect button
-    const handleConnect = async () => {
+    // Toggle connection (connect/disconnect)
+    const toggleConnection = async () => {
         if (!providerRef.current) return;
-        try {
-            logger.log('Connecting...');
-            await providerRef.current.connect();
-        } catch (e) {
-            const err = e as Error;
-            logger.error(`Connection failed: ${err.message}`);
+        
+        if (state === 'connected') {
+            // Disconnect
+            logger.log('Disconnecting...');
+            await providerRef.current.disconnect();
+        } else {
+            // Connect
+            try {
+                setIsLoading(true);
+                logger.log('Connecting...');
+                await providerRef.current.connect();
+            } catch (e) {
+                const err = e as Error;
+                setIsLoading(false);
+                logger.error(`Connection failed: ${err.message}`);
+            }
         }
-    };
-
-    // Handle disconnect button
-    const handleDisconnect = async () => {
-        if (!providerRef.current) return;
-        logger.log('Disconnect called');
-        await providerRef.current.disconnect();
     };
 
     // Handle send test audio button
@@ -186,6 +213,7 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
         if (!providerRef.current) return;
         
         try {
+            setIsLoading(true);
             // Create a dummy audio chunk for testing
             const dummyAudio = new Blob([new Uint8Array(1000)], { type: 'audio/webm' });
             logger.log('Sending test audio...');
@@ -195,8 +223,10 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
                 timestamp: Date.now(),
                 isLastChunk: true
             });
+            setIsLoading(false);
         } catch (e) {
             const err = e as Error;
+            setIsLoading(false);
             logger.error(`Send audio failed: ${err.message}`);
         }
     };
@@ -209,6 +239,7 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
         }
         
         try {
+            setIsLoading(true);
             logger.log('Testing server connection...');
             const baseUrl = generateAPIUrl('');
             logger.log(`Base URL: ${baseUrl}`);
@@ -226,133 +257,101 @@ export default function ProviderTester({ providerType = 'openai' }: ProviderTest
             logger.log(`Auth response status: ${response.status}`);
             const data = await response.text();
             logger.response('Auth response', data);
+            setIsLoading(false);
         } catch (e) {
             const err = e as Error;
+            setIsLoading(false);
             logger.error(`Server connection test failed: ${err.message}`);
         }
     };
 
+    // Clear logs handler
+    const clearLogs = () => {
+        logger.clearLogs();
+    };
+
+    // Get connection button text based on state
+    const getConnectionButtonText = () => {
+        if (isLoading) return 'Loading...';
+        if (state === 'connected') return 'Disconnect';
+        return 'Connect';
+    };
+
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>{providerType === 'hume' ? 'Hume AI' : 'OpenAI'} Voice Provider Test</Text>
-            <Text style={styles.state}>State: {state}</Text>
-            {providerType === 'openai' && (
-                <Text style={styles.apiUrl}>API URL: {openaiApiUrl}</Text>
-            )}
-            {error && (
-                <Text style={styles.error}>{error}</Text>
-            )}
-            <View style={styles.buttonContainer}>
-                {providerType === 'openai' && (
-                    <View style={styles.buttonWrapper}>
-                        <Button
-                            title="Test Server Connection"
-                            onPress={testServerConnection}
-                        />
-                    </View>
-                )}
+        <YStack flex={1}>
+            <Card elevate bordered padding="$4" marginBottom="$4">
+                <YStack space="$3">
+                    <XStack space="$3" alignItems="center">
+                        <Text fontSize="$4" fontWeight="bold">Status:</Text>
+                        <Text 
+                            fontSize="$4"
+                            color={getStateTextColor(state)}
+                        >
+                            {state.charAt(0).toUpperCase() + state.slice(1)}
+                        </Text>
+                    </XStack>
 
-                <View style={styles.buttonWrapper}>
-                    <Button
-                        title="Connect"
-                        onPress={handleConnect}
-                        disabled={state === 'connecting' || state === 'connected'}
-                    />
-                </View>
+                    {error && (
+                        <Text fontSize="$3" color="red">
+                            Error: {error}
+                        </Text>
+                    )}
 
-                <View style={styles.buttonWrapper}>
-                    <Button
-                        title="Disconnect"
-                        onPress={handleDisconnect}
-                        disabled={state === 'disconnected'}
-                    />
-                </View>
+                    <XStack space="$3" flexWrap="wrap">
+                        {providerType === 'openai' && (
+                            <Button 
+                                onPress={testServerConnection}
+                                disabled={isLoading}
+                                backgroundColor="blue"
+                                marginVertical="$1"
+                            >
+                                {isLoading ? <Spinner /> : 'Test Connection'}
+                            </Button>
+                        )}
 
-                <View style={styles.buttonWrapper}>
-                    <Button
-                        title="Send Audio"
-                        onPress={handleSendTestAudio}
-                        disabled={state !== 'connected'}
-                    />
-                </View>
-            </View>
+                        <Button 
+                            onPress={toggleConnection}
+                            disabled={isLoading || state === 'connecting'}
+                            backgroundColor={getConnectionButtonColor(state)}
+                            marginVertical="$1"
+                        >
+                            {isLoading ? <Spinner /> : getConnectionButtonText()}
+                        </Button>
 
-            <Text style={styles.logsTitle}>Event Log:</Text>
-            <ScrollView style={styles.logs}>
-                {messages.map((msg, i) => (
-                    <Text key={i} style={styles.logEntry}>{msg}</Text>
-                ))}
-            </ScrollView>
-            <Text style={styles.debugTitle}>Debug Info:</Text>
-            <Text style={styles.debugInfo}>
-                Provider: {providerType}{'\n'}
-                Platform: {Platform.OS}
-            </Text>
-        </View>
+                        {uiConfig.showSendAudioButton && (
+                            <Button 
+                                onPress={handleSendTestAudio}
+                                disabled={isLoading || state !== 'connected'}
+                                backgroundColor="purple"
+                                marginVertical="$1"
+                            >
+                                {isLoading ? <Spinner /> : 'Send Test Audio'}
+                            </Button>
+                        )}
+
+                        <Button 
+                            onPress={clearLogs}
+                            backgroundColor="gray"
+                            marginVertical="$1"
+                        >
+                            Clear Logs
+                        </Button>
+                    </XStack>
+                </YStack>
+            </Card>
+
+            <Card flex={1} elevate bordered padding="$4">
+                <Text fontSize="$4" fontWeight="bold" marginBottom="$2">
+                    Event Log:
+                </Text>
+                <ScrollView style={{ flex: 1 }}>
+                    {messages.map((msg, i) => (
+                        <Text key={i} fontSize="$2" marginBottom="$1">
+                            {msg}
+                        </Text>
+                    ))}
+                </ScrollView>
+            </Card>
+        </YStack>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-        backgroundColor: '#fff',
-    },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 8,
-        textAlign: 'center',
-    },
-    state: {
-        fontSize: 16,
-        marginBottom: 4,
-        textAlign: 'center',
-    },
-    apiUrl: {
-        fontSize: 12,
-        marginBottom: 12,
-        textAlign: 'center',
-        color: '#666',
-    },
-    error: {
-        color: 'red',
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    buttonContainer: {
-        flexDirection: 'column',
-        marginVertical: 16,
-    },
-    buttonWrapper: {
-        marginVertical: 8,
-        width: '100%',
-    },
-    logsTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 8,
-    },
-    logs: {
-        flex: 1,
-        backgroundColor: '#f0f0f0',
-        padding: 8,
-        marginTop: 8,
-        borderRadius: 4,
-    },
-    logEntry: {
-        fontSize: 12,
-        marginBottom: 4,
-    },
-    debugTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginTop: 8,
-    },
-    debugInfo: {
-        marginTop: 8,
-        padding: 16,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 4,
-    },
-});
