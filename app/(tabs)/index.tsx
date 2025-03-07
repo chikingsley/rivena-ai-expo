@@ -1,4 +1,4 @@
-import { generateAPIUrl } from '@/utils';
+import { generateAPIUrl } from '@/lib/utils';
 import { useChat } from '@ai-sdk/react';
 import { fetch as expoFetch } from 'expo/fetch';
 
@@ -9,7 +9,6 @@ import {
   Platform,
   ScrollView,
   View,
-  SafeAreaView,
   StatusBar,
   Keyboard,
   TextInput,

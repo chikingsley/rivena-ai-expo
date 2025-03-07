@@ -1,14 +1,12 @@
 import Constants from 'expo-constants';
 
 export const generateAPIUrl = (relativePath: string) => {
-  // Add fallback for when experienceUrl is undefined
-  const experienceUrl = Constants.experienceUrl || 'exp://localhost:8081';
-  const origin = experienceUrl.replace('exp://', 'http://');
-
   const path = relativePath.startsWith('/') ? relativePath : `/${relativePath}`;
 
   if (process.env.NODE_ENV === 'development') {
-    return origin.concat(path);
+    // Use the correct API server port in development
+    const devApiUrl = 'http://192.168.0.229:3000';
+    return devApiUrl.concat(path);
   }
 
   if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
