@@ -5,15 +5,12 @@ import {
     VoiceProviderConfig,
     AudioChunk
 } from './base/VoiceProvider';
+import { AudioProcessor, MimeType } from './utils/audio-processor';
 import {
-    HumeClient,
-    convertBlobToBase64,
-    convertBase64ToBlob
+    HumeClient
     // Commented out for now, will use later
-    // getBrowserSupportedMimeType,
     // getAudioStream,
-    // ensureSingleValidAudioTrack,
-    // MimeType
+    // ensureSingleValidAudioTrack
 } from 'hume';
 import { Platform } from 'react-native';
 import { getHumeAccessToken } from '../lib/getHumeAccessToken';
@@ -52,10 +49,8 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
     //     return result.success ? result.mimeType : MimeType.WEBM;
     // })();
 
-    // Audio playback queue
-    const audioQueue: Blob[] = [];
-    let isPlaying = false;
-    let currentAudio: HTMLAudioElement | null = null;
+    // Create audio playback queue using the AudioProcessor utility
+    const playbackQueue = AudioProcessor.createPlaybackQueue();
 
     // Event listeners management
     const eventListeners: {
@@ -90,47 +85,7 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
         }
     };
 
-    // Audio playback functions
-    const playAudio = () => {
-        if (!audioQueue.length || isPlaying) return;
-
-        isPlaying = true;
-        const audioBlob = audioQueue.shift();
-        if (!audioBlob) return;
-
-        try {
-            const audioUrl = URL.createObjectURL(audioBlob);
-            currentAudio = new Audio(audioUrl);
-
-            currentAudio.play().catch(error => {
-                console.error('Error playing audio:', error);
-                isPlaying = false;
-                if (audioQueue.length) playAudio();
-            });
-
-            currentAudio.onended = () => {
-                isPlaying = false;
-                if (audioQueue.length) playAudio();
-            };
-        } catch (error) {
-            console.error('Error creating audio element:', error);
-            isPlaying = false;
-            if (audioQueue.length) playAudio();
-        }
-    };
-
-    const stopAudio = () => {
-        if (currentAudio) {
-            try {
-                currentAudio.pause();
-            } catch (error) {
-                console.error('Error stopping audio:', error);
-            }
-            currentAudio = null;
-        }
-        isPlaying = false;
-        audioQueue.length = 0;
-    };
+    // Audio playback functions are now handled by the playbackQueue from AudioProcessor
 
     // Commented out for now, will use later
     /*
@@ -237,13 +192,12 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
                                 try {
                                     // Handle differently based on platform
                                     if (Platform.OS === 'web') {
-                                        // For web, use the SDK's convertBase64ToBlob
-                                        const audioBlob = convertBase64ToBlob(message.data);
+                                        // For web, use our AudioProcessor utility
+                                        const audioBlob = AudioProcessor.base64ToBlob(message.data, AudioProcessor.getMimeTypeFromFormat(config.audioFormat || 'webm'));
                                         emit('audioOutput', audioBlob);
 
-                                        // Add to queue for playback
-                                        audioQueue.push(audioBlob);
-                                        if (audioQueue.length === 1) playAudio();
+                                        // Add to queue for playback using our playbackQueue
+                                        playbackQueue.enqueue(audioBlob);
                                     } else {
                                         // For React Native, just emit the base64 data
                                         // We'll handle it differently in the consumer
@@ -263,7 +217,7 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
                             break;
 
                         case 'user_interruption':
-                            stopAudio();
+                            playbackQueue.stop();
                             emit('message', {
                                 type: 'interrupt',
                                 content: 'User interrupted'
@@ -323,7 +277,7 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
 
         // Commented out for now, will use later
         // stopRecording();
-        stopAudio();
+        playbackQueue.stop();
 
         if (socket) {
             if (currentState !== 'disconnected') {
@@ -353,7 +307,7 @@ export const createHumeVoiceProvider = (initialConfig: HumeVoiceConfig): VoicePr
         }
 
         try {
-            const base64Data = await convertBlobToBase64(chunk.data);
+            const base64Data = await AudioProcessor.blobToBase64(chunk.data);
             socket.sendAudioInput({
                 data: base64Data,
                 timestamp: new Date().toISOString()

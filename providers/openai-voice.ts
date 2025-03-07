@@ -6,8 +6,9 @@ import {
     VoiceProviderConfig,
     AudioChunk
 } from './base/VoiceProvider';
+import { AudioProcessor } from './utils/audio-processor';
 
-const ai_model = process.env.EXPO_PUBLIC_OPENAI_MODEL;      
+const ai_model = process.env.EXPO_PUBLIC_OPENAI_MODEL;
 const serverMiddlewareEndpoint = process.env.EXPO_PUBLIC_MIDDLEWARE_ENDPOINT; // Your Elysia server endpoint for auth
 
 if (!ai_model || !serverMiddlewareEndpoint) {
@@ -15,7 +16,7 @@ if (!ai_model || !serverMiddlewareEndpoint) {
 }
 
 export interface OpenAIVoiceConfig extends VoiceProviderConfig {
-    model: typeof ai_model; 
+    model: typeof ai_model;
     serverMiddlewareEndpoint: typeof serverMiddlewareEndpoint; // Your Elysia server endpoint for auth
 }
 
@@ -103,7 +104,7 @@ export const createOpenAIVoiceProvider = (initialConfig: OpenAIVoiceConfig): Voi
                 `model.${config.model}`,
                 "openai-beta.realtime-v1"
             ];
-            
+
             // Create WebSocket with correct protocols
             ws = new WebSocket(url, protocols);
 
@@ -132,8 +133,8 @@ export const createOpenAIVoiceProvider = (initialConfig: OpenAIVoiceConfig): Voi
                     switch (data.type) {
                         case 'text_delta':
                             // Only log a brief summary of delta updates
-                            emit('message', { 
-                                type: 'text_delta', 
+                            emit('message', {
+                                type: 'text_delta',
                                 content: data.delta?.text ? 'Text delta received' : 'Empty delta'
                             });
                             break;
@@ -141,11 +142,11 @@ export const createOpenAIVoiceProvider = (initialConfig: OpenAIVoiceConfig): Voi
                         case 'audio_chunk':
                             // Process audio data
                             if (data.audio && data.audio.data) {
-                                const audioBlob = base64ToBlob(data.audio.data, 'audio/webm');
+                                const audioBlob = AudioProcessor.base64ToBlob(data.audio.data, 'audio/webm');
                                 emit('audioOutput', audioBlob);
                                 // Log just the size of audio data
-                                emit('message', { 
-                                    type: 'audio_chunk', 
+                                emit('message', {
+                                    type: 'audio_chunk',
                                     content: `Received audio chunk: ${audioBlob.size} bytes`
                                 });
                             }
@@ -255,8 +256,8 @@ export const createOpenAIVoiceProvider = (initialConfig: OpenAIVoiceConfig): Voi
         }
 
         try {
-            // Convert blob to base64
-            const base64Data = await blobToBase64(chunk.data);
+            // Convert blob to base64 using the shared AudioProcessor
+            const base64Data = await AudioProcessor.blobToBase64(chunk.data);
 
             // Create the audio_input message
             const audioMessage = {
@@ -295,36 +296,28 @@ export const createOpenAIVoiceProvider = (initialConfig: OpenAIVoiceConfig): Voi
         config = { ...config, ...newConfig };
     };
 
-    // Helper function: Convert blob to base64
-    const blobToBase64 = (blob: Blob): Promise<string> => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
-                    // Remove data URL prefix
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                } else {
-                    reject(new Error('Failed to convert blob to base64'));
-                }
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
-    };
-
-    // Helper function: Convert base64 to blob
-    const base64ToBlob = (base64: string, mimeType: string): Blob => {
-        const byteString = atob(base64);
-        const arrayBuffer = new ArrayBuffer(byteString.length);
-        const uint8Array = new Uint8Array(arrayBuffer);
-
-        for (let i = 0; i < byteString.length; i++) {
-            uint8Array[i] = byteString.charCodeAt(i);
+    const addEventListener = <K extends keyof VoiceProviderEvents>(
+        event: K,
+        listener: VoiceProviderEvents[K]
+    ): void => {
+        if (!eventListeners[event]) {
+            eventListeners[event] = [];
         }
-
-        return new Blob([arrayBuffer], { type: mimeType });
+        eventListeners[event]?.push(listener);
     };
+
+    const removeEventListener = <K extends keyof VoiceProviderEvents>(
+        event: K,
+        listener: VoiceProviderEvents[K]
+    ): void => {
+        if (!eventListeners[event]) return;
+        const index = eventListeners[event]?.indexOf(listener) ?? -1;
+        if (index > -1) {
+            eventListeners[event]?.splice(index, 1);
+        }
+    };
+
+    // Use the shared AudioProcessor utilities instead of local implementations
 
     // Public interface
     return {
@@ -334,24 +327,8 @@ export const createOpenAIVoiceProvider = (initialConfig: OpenAIVoiceConfig): Voi
         sendAudio,
         interrupt,
         getState: () => state,
-        addEventListener: <K extends keyof VoiceProviderEvents>(
-            event: K,
-            listener: VoiceProviderEvents[K]
-        ) => {
-            if (!eventListeners[event]) {
-                eventListeners[event] = [];
-            }
-            eventListeners[event]?.push(listener);
-        },
-        removeEventListener: <K extends keyof VoiceProviderEvents>(
-            event: K,
-            listener: VoiceProviderEvents[K]
-        ) => {
-            const listeners = eventListeners[event];
-            if (listeners) {
-                eventListeners[event] = listeners.filter(l => l !== listener) as typeof listeners;
-            }
-        },
+        addEventListener,
+        removeEventListener,
         updateConfig
     };
 };
