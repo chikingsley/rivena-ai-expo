@@ -1,9 +1,10 @@
-import { generateAPIUrl } from '@/lib/utils';
+import { generateAPIUrl } from '@/lib/generateApiUrl';
 import { useChat } from '@ai-sdk/react';
 import { fetch as expoFetch } from 'expo/fetch';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Text, Button } from 'tamagui';
+import { Text } from '@/components/ui/text';
+import { Button } from '@/components/ui/button';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Platform,

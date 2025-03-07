@@ -2,7 +2,7 @@
 module.exports = {
   extends: ['expo', 'prettier'],
   plugins: ['prettier', 'react', 'react-hooks'],
-  ignorePatterns: ['dist/**', 'references/**', 'node_modules/**', '.tamagui/**'],
+  ignorePatterns: ['dist/**', 'references/**', 'node_modules/**'],
   rules: {
     'prettier/prettier': 'error',
     'react-hooks/exhaustive-deps': 'warn',

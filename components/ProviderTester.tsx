@@ -4,8 +4,9 @@ import { ScrollView } from 'react-native';
 import { createOpenAIVoiceProvider } from '../providers/openai-voice';
 import { createHumeVoiceProvider } from '../providers/hume-voice';
 import type { VoiceProvider, VoiceProviderState } from '../providers/base/VoiceProvider';
-import { generateAPIUrl } from '../lib/utils';
-import { YStack, XStack, Button, Text, Card, Spinner } from 'tamagui';
+import { generateAPIUrl } from '../lib/generateApiUrl';
+import { Button, Card, Text } from '@/components/ui';
+import { YStack, XStack, Spinner } from 'tamagui';
 
 // Create a logger function that logs to both console and UI with better formatting
 const createLogger = (setMessages: React.Dispatch<React.SetStateAction<string[]>>) => {

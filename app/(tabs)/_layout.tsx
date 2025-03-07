@@ -4,10 +4,10 @@ import { Platform } from 'react-native';
 import '@/polyfills';
 
 import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { House, Mic } from '@/lib/icons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -31,21 +31,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="voice"
-        options={{
-          title: 'Voice',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="microphone.fill" color={color} />,
+          tabBarIcon: ({ color }) => <House size={28} color={color} />,
         }}
       />
       <Tabs.Screen
         name="voice2"
         options={{
           title: 'Voice2',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="microphone.fill" color={color} />,
+          tabBarIcon: ({ color }) => <Mic size={28} color={color} />,
         }}
       />
     </Tabs>
