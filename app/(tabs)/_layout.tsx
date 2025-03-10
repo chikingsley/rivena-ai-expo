@@ -7,7 +7,7 @@ import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { House, Mic } from '@/lib/icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -28,17 +28,24 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <House size={28} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="home" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="voice2"
+        name="newVoice"
         options={{
-          title: 'Voice2',
-          tabBarIcon: ({ color }) => <Mic size={28} color={color} />,
+          title: 'Voice',
+          tabBarIcon: ({ color }) => <Ionicons name="mic" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="sessions"
+        options={{
+          title: 'Sessions',
+          tabBarIcon: ({ color }) => <Ionicons name="list" size={28} color={color} />,
         }}
       />
     </Tabs>

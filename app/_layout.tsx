@@ -1,5 +1,6 @@
 import '@/global.css';
 
+import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -19,6 +20,10 @@ const DARK_THEME: Theme = {
   ...DarkTheme,
   colors: NAV_THEME.dark,
 };
+
+const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+  unsavedChangesWarning: false,
+});
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,19 +54,20 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
-      <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />
-      <Stack>
-        <Stack.Screen
-          name='index'
-          options={{
-            title: 'Starter Base',
-            headerRight: () => <ThemeToggle />,
-          }}
-        />
-      </Stack>
-      <PortalHost />
-    </ThemeProvider>
+    <ConvexProvider client={convex}>
+      <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
+        <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />
+        <Stack>
+          <Stack.Screen
+            name='(tabs)'
+            options={{
+              headerShown: false,
+            }}
+          />
+        </Stack>
+        <PortalHost />
+      </ThemeProvider>
+    </ConvexProvider>
   );
 }
 
