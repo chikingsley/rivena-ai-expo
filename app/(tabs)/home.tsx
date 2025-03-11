@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInUp, FadeOutDown, LayoutAnimationConfig } from 'react-native-reanimated';
-import { Info } from '@/lib/icons/';
+import { Ionicons } from '@expo/vector-icons';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,7 +41,7 @@ export default function Screen() {
             <CardDescription className='text-base font-semibold'>Scientist</CardDescription>
             <Tooltip delayDuration={150}>
               <TooltipTrigger className='px-2 pb-0.5 active:opacity-50'>
-                <Info size={14} strokeWidth={2.5} className='w-4 h-4 text-foreground/70' />
+                <Ionicons name="information-circle" size={14} className='w-4 h-4 text-foreground/70' />
               </TooltipTrigger>
               <TooltipContent className='py-2 px-4 shadow'>
                 <Text className='native:text-lg'>Freelance</Text>
