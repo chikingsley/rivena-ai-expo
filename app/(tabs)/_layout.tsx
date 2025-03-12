@@ -4,21 +4,21 @@ import { Platform } from 'react-native';
 import '@/polyfills';
 
 import { HapticTab } from '@/components/HapticTab';
-import TabBarBackground from '@/components/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useThemeStore } from '@/store/themeStore';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { theme } = useThemeStore();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveBackgroundColor: theme === 'light' ? '#fff' : '#1e1b2e',
+        tabBarInactiveBackgroundColor: theme === 'light' ? '#fff' : '#1e1b2e',
+        tabBarActiveTintColor: theme === 'light' ? 'hsl(270.7, 91%, 65.1%)' : 'hsl(270.7, 91%, 65.1%)',
+        tabBarInactiveTintColor: theme === 'light' ? '#666' : '#999',
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
         tabBarStyle: Platform.select({
           ios: {
             // Use a transparent background on iOS to show the blur effect
@@ -35,9 +35,9 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="newVoice"
+        name="HomeX"
         options={{
-          title: 'Voice',
+          title: 'HomeX',
           tabBarIcon: ({ color }) => <Ionicons name="mic" size={28} color={color} />,
         }}
       />

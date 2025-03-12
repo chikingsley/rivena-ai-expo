@@ -1,9 +1,0 @@
-{
-  "root": true,
-  "ignorePatterns": [
-    "**/*"
-  ],
-  "extends": [
-    "plugin:storybook/recommended"
-  ]
-}
