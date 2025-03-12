@@ -1,9 +1,14 @@
 import React, { useState, useCallback } from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { CalendarProvider, CalendarUtils, WeekCalendar, DateData } from 'react-native-calendars';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
 import { Ionicons } from '@expo/vector-icons';
+
+// Define constants for styling to avoid recreating objects
+const DISABLED_LIGHT_COLOR = 'rgba(0,0,0,0.4)';
+const DISABLED_DARK_COLOR = 'rgba(255,255,255,0.4)';
+const DAY_NAMES = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 interface WeeklyCalendarProps {
   onDateSelect?: (date: Date) => void;
@@ -27,87 +32,48 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
     CalendarUtils.getCalendarDateString(initialDate)
   );
   
-  // Format date string to Date object
-  const formatDateString = (dateString: string): Date => {
-    if (!dateString) return new Date(); // Return current date if dateString is undefined
-    const [year, month, day] = dateString.split('-').map(Number);
-    return new Date(year, month - 1, day); // Month is 0-indexed in Date constructor
-  };
-  
-  // Handle date selection
+  // Handle date selection - Simplified date handling (Optimization 3)
   const handleDateSelect = useCallback((date: DateData) => {
-    if (!date || !date.dateString) return; // Guard against undefined date
+    if (!date?.dateString) return;
     
-    const selectedDateObj = formatDateString(date.dateString);
-    const todayDate = new Date();
-    todayDate.setHours(23, 59, 59, 999); // Set to end of day for proper comparison
-    
-    // Can't select future dates
-    if (selectedDateObj > todayDate) {
+    // Simplified date comparison - just compare strings for today's date
+    const isInFuture = date.dateString > today;
+    if (isInFuture) {
       console.log('Cannot select future date');
       return;
     }
     
-    console.log('Date selected:', date.dateString);
+    // Toggle selection logic simplified
+    const newSelectedDate = date.dateString === selectedDate ? '' : date.dateString;
+    setSelectedDate(newSelectedDate);
     
-    // Toggle selection if same date
-    if (date.dateString === selectedDate) {
-      setSelectedDate('');
-      if (onDateSelect) {
-        onDateSelect(new Date()); // Send today's date instead of null
-      }
-    } else {
-      setSelectedDate(date.dateString);
-      if (onDateSelect) {
-        onDateSelect(selectedDateObj);
+    if (onDateSelect) {
+      // Convert to Date object only when needed for the callback
+      if (newSelectedDate) {
+        const [year, month, day] = newSelectedDate.split('-').map(Number);
+        onDateSelect(new Date(year, month - 1, day));
+      } else {
+        onDateSelect(new Date()); // Send today's date when deselecting
       }
     }
-  }, [selectedDate, onDateSelect]);
+  }, [selectedDate, onDateSelect, today]);
   
-  // Get completed dates (all dates before today)
-  const getCompletedDates = () => {
-    const completedDates: { [key: string]: any } = {};
-    const todayDate = new Date();
-    
-    // Start from 30 days ago to include all possible completed dates in view
-    for (let i = 30; i > 0; i--) {
-      const date = new Date();
-      date.setDate(todayDate.getDate() - i);
-      const dateString = CalendarUtils.getCalendarDateString(date);
-      
-      // Skip some dates randomly to simulate incomplete days
-      if (i % 3 === 0) continue;
-      
-      completedDates[dateString] = {
-        marked: true,
-        completed: true, // Custom property to track completion
-        dotColor: Colors[theme].primary
-      };
-    }
-    
-    return completedDates;
-  };
-  
-  // Create marked dates object for the calendar
+  // Create marked dates object - Removed unused features (Optimization 4)
   const getMarkedDates = () => {
-    const markedDates: { [key: string]: any } = {
-      ...getCompletedDates()
-    };
+    const markedDates: { [key: string]: any } = {};
     
     // Add selected date styling
     if (selectedDate) {
       markedDates[selectedDate] = {
-        ...markedDates[selectedDate],
         selected: true,
-        selectedColor: 'transparent', // No fill
+        selectedColor: 'transparent',
         selectedTextColor: Colors[theme].foreground,
         customStyles: {
           container: {
-            backgroundColor: 'transparent', // No fill
+            backgroundColor: 'transparent',
             borderWidth: 2,
             borderColor: Colors[theme].primary,
-            borderRadius: 20, // Larger radius for a circle
-            padding: 2 // Extra padding to make the circle larger
+            borderRadius: 8,
           },
           text: {
             color: Colors[theme].foreground,
@@ -131,71 +97,56 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
     return markedDates;
   };
   
-  // Get maximum date (today, can't select future)
-  const maxDate = CalendarUtils.getCalendarDateString(new Date());
+  // Maximum date is today (can't select future)
+  const maxDate = today;
   
-  // Custom day component
+  // Custom day component - Improved event handling (Optimization 5)
   const CustomDayComponent = (props: DayComponentProps) => {
     if (!props.date) return null;
     
     const { date, state, marking, onPress } = props;
     const isSelected = marking?.selected;
-    const isCompleted = marking?.completed;
     const isDisabled = state === 'disabled';
     
-    // Determine text color based on state
+    // Determine text color based on state - Optimized styling (Optimization 7)
     const textColor = isDisabled 
-      ? theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'
+      ? theme === 'dark' ? DISABLED_DARK_COLOR : DISABLED_LIGHT_COLOR
       : Colors[theme].foreground;
     
-    // Day of week abbreviations
-    const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    // Get day of week index
     const dayIndex = new Date(date.year, date.month - 1, date.day).getDay();
     
-    // Handle press event to ensure selection works
-    const handlePress = () => {
-      if (onPress && date) {
-        onPress(date);
-      }
-    };
-    
     return (
-      <View 
+      <TouchableOpacity 
         style={styles.dayWrapper}
-        onTouchEnd={handlePress}
+        onPress={() => onPress?.(date)}
+        disabled={isDisabled}
+        activeOpacity={0.7}
       >
         <View style={[
           styles.dayContainer,
           isSelected && {
             ...styles.selectedDayContainer,
-            borderColor: Colors[theme].primary, // Use current theme color
+            borderColor: Colors[theme].primary,
           }
         ]}>
           {/* Day of week */}
           <Text style={[styles.dayText, { color: textColor }]}>
-            {dayNames[dayIndex]}
+            {DAY_NAMES[dayIndex]}
           </Text>
           
-          {/* Day number or checkmark */}
+          {/* Day number */}
           <View style={styles.dayNumberContainer}>
-            {isCompleted ? (
-              <Ionicons 
-                name="checkmark" 
-                size={16} 
-                color={Colors[theme].primary} 
-              />
-            ) : (
-              <Text style={[
-                styles.dayNumberText, 
-                { color: textColor },
-                isSelected && { fontWeight: 'bold' }
-              ]}>
-                {date.day}
-              </Text>
-            )}
+            <Text style={[
+              styles.dayNumberText, 
+              { color: textColor },
+              isSelected && { fontWeight: 'bold' }
+            ]}>
+              {date.day}
+            </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -224,7 +175,7 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
             selectedDayTextColor: Colors[theme].foreground,
             todayTextColor: Colors[theme].foreground,
             dayTextColor: Colors[theme].foreground,
-            textDisabledColor: theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+            textDisabledColor: theme === 'dark' ? DISABLED_DARK_COLOR : DISABLED_LIGHT_COLOR,
             dotColor: Colors[theme].primary,
             selectedDotColor: Colors[theme].primary,
             arrowColor: Colors[theme].primary,
