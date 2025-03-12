@@ -27,19 +27,19 @@ export default function TabLayout() {
         {/* These define the available routes but are hidden from view */}
         <View>
           <TabTrigger name="home" href="/home">
-            <TabButton iconName="home" label="Home" />
+            <TabButton iconName="home" label="Home" routePath="/home" />
           </TabTrigger>
           <TabTrigger name="history" href="/history">
-            <TabButton iconName="calendar" label="History" />
+            <TabButton iconName="calendar" label="History" routePath="/history" />
           </TabTrigger>
           {/* <TabTrigger name="new-session" href="/new-session">
-            <TabButton iconName="add" label="New Session" />
+            <TabButton iconName="add" label="New Session" routePath="/new-session" />
           </TabTrigger> */}
           <TabTrigger name="insights" href="/insights">
-            <TabButton iconName="stats-chart" label="Insights" />
+            <TabButton iconName="stats-chart" label="Insights" routePath="/insights" />
           </TabTrigger>
           <TabTrigger name="profile" href="/profile">
-            <TabButton iconName="person" label="Profile" />
+            <TabButton iconName="person" label="Profile" routePath="/profile" />
           </TabTrigger>
         </View>
       </TabList>
@@ -73,22 +73,22 @@ export default function TabLayout() {
           }]}
         >
           <TabTrigger name="home">
-            <TabButton iconName="home" label="Home" />
+            <TabButton iconName="home" label="Home" routePath="/home" />
           </TabTrigger>
           
           <TabTrigger name="history">
-            <TabButton iconName="calendar" label="History" />
+            <TabButton iconName="calendar" label="History" routePath="/history" />
           </TabTrigger>
           
           {/* Empty space for FAB */}
           <View style={styles.fabSpace} />
           
           <TabTrigger name="insights">
-            <TabButton iconName="stats-chart" label="Insights" />
+            <TabButton iconName="stats-chart" label="Insights" routePath="/insights" />
           </TabTrigger>
           
           <TabTrigger name="profile">
-            <TabButton iconName="person" label="Profile" />
+            <TabButton iconName="person" label="Profile" routePath="/profile" />
           </TabTrigger>
         </View>
       </View>
@@ -109,9 +109,9 @@ const styles = StyleSheet.create({
     zIndex: 1 
   },
   fab: { 
-    width: 56, 
-    height: 56, 
-    borderRadius: 28, 
+    width: 66, 
+    height: 66, 
+    borderRadius: 33, 
     alignItems: 'center', 
     justifyContent: 'center',
     shadowOffset: { width: 0, height: 4 },

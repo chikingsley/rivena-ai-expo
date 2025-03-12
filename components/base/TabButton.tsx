@@ -4,6 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Colors } from '@/constants/Colors';
 import { useThemeStore } from '@/store/themeStore';
+import { usePathname } from 'expo-router';
 
 // Define the type for Ionicons names
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
@@ -11,10 +12,16 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 type TabButtonProps = {
   iconName: Omit<IconName, `${string}-outline`>; // Base name without -outline
   label: string;
-  isFocused?: boolean;
+  routePath?: string; // The route path this tab navigates to
+  isFocused?: boolean; // Optional override for testing
 };
 
-export function TabButton({ iconName, label, isFocused = false }: TabButtonProps) {
+export function TabButton({ iconName, label, routePath, isFocused: forcedFocus }: TabButtonProps) {
+  const pathname = usePathname();
+  // Determine if this tab is focused based on the current path
+  // Use forcedFocus if provided (for testing), otherwise check the route
+  const isFocused = forcedFocus !== undefined ? forcedFocus : 
+    routePath ? pathname === routePath || pathname.startsWith(routePath + '/') : false;
   const { theme } = useThemeStore();
 
   // Properly type the icon name with TypeScript
@@ -24,26 +31,31 @@ export function TabButton({ iconName, label, isFocused = false }: TabButtonProps
   return (
     <View style={styles.tabItem}>
       <View style={[
-        styles.iconContainer,
-        { backgroundColor: isFocused ? Colors[theme].primary : 'transparent' }
+        styles.buttonContainer,
+        { 
+          backgroundColor: isFocused ? Colors[theme].primaryLight : 'transparent',
+          borderColor: isFocused ? Colors[theme].primary : 'transparent',
+          borderWidth: isFocused ? 1 : 0
+        }
       ]}>
         <Ionicons
           name={isFocused ? filledName : outlineName}
           size={20}
           color={isFocused ? Colors[theme].primary : Colors[theme].muted}
+          style={styles.icon}
         />
+        <Text
+          style={[
+            styles.tabLabel,
+            {
+              color: isFocused ? Colors[theme].primary : Colors[theme].muted,
+              fontWeight: isFocused ? '500' : 'normal'
+            }
+          ]}
+        >
+          {label}
+        </Text>
       </View>
-      <Text
-        style={[
-          styles.tabLabel,
-          {
-            color: isFocused ? Colors[theme].primary : Colors[theme].muted,
-            fontWeight: isFocused ? '500' : 'normal'
-          }
-        ]}
-      >
-        {label}
-      </Text>
     </View>
   );
 }
@@ -52,15 +64,19 @@ const styles = StyleSheet.create({
   tabItem: {
     alignItems: 'center'
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  buttonContainer: {
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 8,
+    borderRadius: 12,
+    minWidth: 60,
+  },
+  icon: {
+    marginBottom: 4
   },
   tabLabel: {
-    fontSize: 12,
-    marginTop: 4
+    fontSize: 12
   }
 });
