@@ -1,7 +1,9 @@
+// app/(tabs)/_layout.tsx
 import { Tabs, TabList, TabTrigger, TabSlot } from 'expo-router/ui';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TabButton } from '@/components/base/TabButton';
 import '@/polyfills';
 
 import { useThemeStore } from '@/store/themeStore';
@@ -24,20 +26,20 @@ export default function TabLayout() {
       >
         {/* These define the available routes but are hidden from view */}
         <View>
-          <TabTrigger name="home" href="/">
-            <Text>Home</Text>
+          <TabTrigger name="home" href="/home">
+            <TabButton iconName="home" label="Home" />
           </TabTrigger>
           <TabTrigger name="history" href="/history">
-            <Text>History</Text>
+            <TabButton iconName="calendar" label="History" />
           </TabTrigger>
-          <TabTrigger name="new-session" href="/new-session">
-            <Text>New Session</Text>
-          </TabTrigger>
+          {/* <TabTrigger name="new-session" href="/new-session">
+            <TabButton iconName="add" label="New Session" />
+          </TabTrigger> */}
           <TabTrigger name="insights" href="/insights">
-            <Text>Insights</Text>
+            <TabButton iconName="stats-chart" label="Insights" />
           </TabTrigger>
           <TabTrigger name="profile" href="/profile">
-            <Text>Profile</Text>
+            <TabButton iconName="person" label="Profile" />
           </TabTrigger>
         </View>
       </TabList>
@@ -71,42 +73,22 @@ export default function TabLayout() {
           }]}
         >
           <TabTrigger name="home">
-            <View style={styles.tabItem}>
-              <View style={[styles.iconContainer, { backgroundColor: Colors[theme].primaryLight }]}>
-                <Ionicons name="home-outline" size={20} color={Colors[theme].primary} />
-              </View>
-              <Text style={[styles.tabLabel, { color: Colors[theme].primary, fontWeight: '500' }]}>Home</Text>
-            </View>
+            <TabButton iconName="home" label="Home" />
           </TabTrigger>
           
           <TabTrigger name="history">
-            <View style={styles.tabItem}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="calendar-outline" size={20} color={Colors[theme].muted} />
-              </View>
-              <Text style={[styles.tabLabel, { color: Colors[theme].muted }]}>History</Text>
-            </View>
+            <TabButton iconName="calendar" label="History" />
           </TabTrigger>
           
           {/* Empty space for FAB */}
           <View style={styles.fabSpace} />
           
           <TabTrigger name="insights">
-            <View style={styles.tabItem}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="stats-chart-outline" size={20} color={Colors[theme].muted} />
-              </View>
-              <Text style={[styles.tabLabel, { color: Colors[theme].muted }]}>Insights</Text>
-            </View>
+            <TabButton iconName="stats-chart" label="Insights" />
           </TabTrigger>
           
           <TabTrigger name="profile">
-            <View style={styles.tabItem}>
-              <View style={styles.iconContainer}>
-                <Ionicons name="person-outline" size={20} color={Colors[theme].muted} />
-              </View>
-              <Text style={[styles.tabLabel, { color: Colors[theme].muted }]}>Profile</Text>
-            </View>
+            <TabButton iconName="person" label="Profile" />
           </TabTrigger>
         </View>
       </View>
@@ -150,20 +132,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 16,
-  },
-  tabItem: { 
-    alignItems: 'center' 
-  },
-  iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabLabel: { 
-    fontSize: 12, 
-    marginTop: 4 
   },
   fabSpace: { 
     width: 56 
