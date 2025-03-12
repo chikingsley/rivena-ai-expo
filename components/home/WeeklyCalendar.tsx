@@ -1,12 +1,23 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import { CalendarProvider, CalendarUtils, WeekCalendar, DateData } from 'react-native-calendars';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
+import { Ionicons } from '@expo/vector-icons';
 
 interface WeeklyCalendarProps {
   onDateSelect?: (date: Date) => void;
   initialDate?: Date;
+}
+
+// Import the DayProps type from react-native-calendars
+interface DayComponentProps {
+  date?: DateData;
+  state?: string;
+  marking?: any;
+  theme?: any;
+  onPress?: (date: DateData) => void;
+  onLongPress?: (date: DateData) => void;
 }
 
 export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: WeeklyCalendarProps) {
@@ -43,7 +54,7 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
     if (date.dateString === selectedDate) {
       setSelectedDate('');
       if (onDateSelect) {
-        onDateSelect(null as any);
+        onDateSelect(new Date()); // Send today's date instead of null
       }
     } else {
       setSelectedDate(date.dateString);
@@ -64,8 +75,12 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
       date.setDate(todayDate.getDate() - i);
       const dateString = CalendarUtils.getCalendarDateString(date);
       
+      // Skip some dates randomly to simulate incomplete days
+      if (i % 3 === 0) continue;
+      
       completedDates[dateString] = {
         marked: true,
+        completed: true, // Custom property to track completion
         dotColor: Colors[theme].primary
       };
     }
@@ -84,13 +99,19 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
       markedDates[selectedDate] = {
         ...markedDates[selectedDate],
         selected: true,
-        selectedColor: 'transparent',
+        selectedColor: 'transparent', // No fill
         selectedTextColor: Colors[theme].foreground,
         customStyles: {
           container: {
+            backgroundColor: 'transparent', // No fill
             borderWidth: 2,
             borderColor: Colors[theme].primary,
-            borderRadius: 8
+            borderRadius: 20, // Larger radius for a circle
+            padding: 2 // Extra padding to make the circle larger
+          },
+          text: {
+            color: Colors[theme].foreground,
+            fontWeight: 'bold'
           }
         }
       };
@@ -113,6 +134,71 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
   // Get maximum date (today, can't select future)
   const maxDate = CalendarUtils.getCalendarDateString(new Date());
   
+  // Custom day component
+  const CustomDayComponent = (props: DayComponentProps) => {
+    if (!props.date) return null;
+    
+    const { date, state, marking, onPress } = props;
+    const isSelected = marking?.selected;
+    const isCompleted = marking?.completed;
+    const isDisabled = state === 'disabled';
+    
+    // Determine text color based on state
+    const textColor = isDisabled 
+      ? theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'
+      : Colors[theme].foreground;
+    
+    // Day of week abbreviations
+    const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    const dayIndex = new Date(date.year, date.month - 1, date.day).getDay();
+    
+    // Handle press event to ensure selection works
+    const handlePress = () => {
+      if (onPress && date) {
+        onPress(date);
+      }
+    };
+    
+    return (
+      <View 
+        style={styles.dayWrapper}
+        onTouchEnd={handlePress}
+      >
+        <View style={[
+          styles.dayContainer,
+          isSelected && {
+            ...styles.selectedDayContainer,
+            borderColor: Colors[theme].primary, // Use current theme color
+          }
+        ]}>
+          {/* Day of week */}
+          <Text style={[styles.dayText, { color: textColor }]}>
+            {dayNames[dayIndex]}
+          </Text>
+          
+          {/* Day number or checkmark */}
+          <View style={styles.dayNumberContainer}>
+            {isCompleted ? (
+              <Ionicons 
+                name="checkmark" 
+                size={16} 
+                color={Colors[theme].primary} 
+              />
+            ) : (
+              <Text style={[
+                styles.dayNumberText, 
+                { color: textColor },
+                isSelected && { fontWeight: 'bold' }
+              ]}>
+                {date.day}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
       <CalendarProvider 
@@ -126,17 +212,19 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
           markedDates={getMarkedDates()}
           maxDate={maxDate}
           allowShadow={false}
-          hideDayNames={false}
+          hideDayNames={true} // Hide default day names as we're using custom ones
           onDayPress={handleDateSelect}
+          dayComponent={CustomDayComponent}
+          style={styles.weekCalendar} // Add custom style
           theme={{
             backgroundColor: 'transparent',
             calendarBackground: 'transparent',
             textSectionTitleColor: Colors[theme].muted,
-            selectedDayBackgroundColor: 'transparent',
+            selectedDayBackgroundColor: 'transparent', // No fill
             selectedDayTextColor: Colors[theme].foreground,
             todayTextColor: Colors[theme].foreground,
             dayTextColor: Colors[theme].foreground,
-            textDisabledColor: theme === 'dark' ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)',
+            textDisabledColor: theme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
             dotColor: Colors[theme].primary,
             selectedDotColor: Colors[theme].primary,
             arrowColor: Colors[theme].primary,
@@ -154,7 +242,40 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    minHeight: 120, // Minimum height for the calendar
     backgroundColor: 'transparent'
+  },
+  weekCalendar: {
+    height: 50, // Increased height for the calendar
+    paddingBottom: 10 // Add bottom padding
+  },
+  dayWrapper: {
+    height: 35, // Ensure enough height for the selection rectangle
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 4,
+    height: 45,
+    width: 40,
+  },
+  selectedDayContainer: {
+    borderWidth: 2,
+    borderColor: 'transparent', // Will be set dynamically based on theme
+    borderRadius: 8,
+    paddingBottom: 2, // Extra padding to ensure the border is fully visible
+  },
+  dayText: {
+    fontSize: 12,
+    marginBottom: 2, // Reduced margin
+  },
+  dayNumberContainer: {
+    height: 24, // Fixed height for consistency
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayNumberText: {
+    fontSize: 16,
   }
 });

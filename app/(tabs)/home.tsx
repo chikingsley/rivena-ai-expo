@@ -149,14 +149,17 @@ const styles = StyleSheet.create({
   },
   calendarSection: {
     marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 8, // Reduced bottom margin
+    paddingHorizontal: 4,
   },
   cardContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 20,
-    padding: 24,
+    gap: 16, // Reduced gap
+    paddingHorizontal: 24,
+    paddingTop: 8, // Reduced top padding
+    paddingBottom: 24,
     backgroundColor: Colors.light.secondary + '4D', // 30% opacity
   },
 });
