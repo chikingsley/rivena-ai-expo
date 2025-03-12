@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,38 +16,30 @@ interface SessionCardProps {
 
 export function SessionCard({ title, subtitle, iconName, onPress }: SessionCardProps) {
   const { theme } = useThemeStore();
+  const [isPressed, setIsPressed] = useState(false);
   
   return (
     <Pressable 
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.cardWrapper,
-        pressed && styles.pressed
-      ]}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      style={styles.cardWrapper}
     >
-      <View style={[
-        styles.cardShadow,
-        { backgroundColor: Colors[theme].background }
-      ]}>
-        <Card className="flex-1 rounded-xl overflow-hidden">
-          <CardContent className="py-8 px-6 flex-col justify-center">
-            <Text className="text-xl font-bold mb-1">{title}</Text>
-            <Text className="text-muted-foreground text-sm mb-4">{subtitle}</Text>
-            <View style={styles.iconContainer}>
-              <View style={[
-                styles.iconCircle, 
-                { backgroundColor: Colors[theme].primaryLight }
-              ]}>
-                <Ionicons 
-                  name={iconName} 
-                  size={24} 
-                  color={Colors[theme].primary} 
-                />
-              </View>
-            </View>
-          </CardContent>
-        </Card>
-      </View>
+      <Card 
+        className={`flex-1 justify-center rounded-xl pt-8 pb-4 overflow-hidden ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}
+      >
+        <CardContent className="p-6 flex-col items-center justify-center">
+          <Text className="text-2xl font-bold mb-1 text-center">{title}</Text>
+          <Text className="text-muted-foreground text-lg mb-4 px-4 text-center">{subtitle}</Text>
+          <View style={styles.iconContainer}>
+              <Ionicons 
+                name={iconName} 
+                size={36} 
+                color={Colors[theme].primary} 
+              />
+          </View>
+        </CardContent>
+      </Card>
     </Pressable>
   );
 }
@@ -55,53 +47,18 @@ export function SessionCard({ title, subtitle, iconName, onPress }: SessionCardP
 const styles = StyleSheet.create({
   cardWrapper: {
     flex: 1,
-    maxWidth: '48%',
-    transform: [{ translateY: 0 }],
-  },
-  pressed: {
-    transform: [{ translateY: -4 }],
-    opacity: 0.9,
-  },
-  cardShadow: {
-    borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 6,
-      },
-      web: {
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-      },
-    }),
+    marginHorizontal: 1, // Add slight margin to prevent shadow clipping
+    marginVertical: 1,
   },
   iconContainer: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-      web: {
-        boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
-      },
-    }),
   }
 });

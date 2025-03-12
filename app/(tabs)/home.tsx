@@ -8,8 +8,6 @@ import { Header } from '@/components/home/Header';
 import { SessionCard } from '@/components/home/cards/SessionCard';
 import { SuggestedSessions } from '@/components/home/SuggestedSessions';
 
-
-
 export default function Screen() {
   const { theme } = useThemeStore();
   const insets = useSafeAreaInsets();
@@ -86,7 +84,7 @@ const styles = StyleSheet.create({
   },
   sessionCardsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 8,
     gap: 12,
   },

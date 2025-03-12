@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
@@ -27,6 +27,7 @@ export function SuggestedSessionCard({
   onPress 
 }: SuggestedSessionCardProps) {
   const { theme } = useThemeStore();
+  const [isPressed, setIsPressed] = useState(false);
   
   // Use provided color or default to primary
   const color = iconColor || Colors[theme].primary;
@@ -34,12 +35,11 @@ export function SuggestedSessionCard({
   return (
     <Pressable 
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.cardWrapper,
-        pressed && styles.pressed
-      ]}
+      onPressIn={() => setIsPressed(true)}
+      onPressOut={() => setIsPressed(false)}
+      style={styles.cardWrapper}
     >
-      <Card className="rounded-xl overflow-hidden w-full">
+      <Card className={`rounded-xl overflow-hidden w-full ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}>
         <CardContent className="p-4">
           <View style={styles.contentContainer}>
             <View style={[
@@ -82,11 +82,7 @@ const styles = StyleSheet.create({
   cardWrapper: {
     width: '100%',
     marginBottom: 12,
-    transform: [{ translateY: 0 }],
-  },
-  pressed: {
-    transform: [{ translateY: -2 }],
-    opacity: 0.95,
+    marginHorizontal: 2, // Add slight margin to prevent shadow clipping
   },
   contentContainer: {
     flexDirection: 'row',
