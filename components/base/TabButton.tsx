@@ -1,9 +1,10 @@
 import React from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, StyleSheet, Animated } from 'react-native';
 import { Text } from '@/components/ui/text';
 import { TabTriggerSlotProps } from 'expo-router/ui';
 import { GestureResponderEvent } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
+import { Colors } from '@/constants/Colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Haptics from 'expo-haptics';
 
@@ -17,7 +18,7 @@ export interface TabButtonProps {
 }
 
 /**
- * Custom tab button component for the bottom navigation
+ * Custom tab button component for the bottom navigation with circular highlight when selected
  */
 export function TabButton({ 
   icon, 
@@ -27,14 +28,35 @@ export function TabButton({
 }: TabButtonProps) {
   const { theme } = useThemeStore();
   const isDark = theme === 'dark';
-
+  
+  // Get colors from our centralized color system
+  const primaryColor = Colors[theme].primary;
+  const primaryLightColor = Colors[theme].primaryLight;
+  const mutedColor = Colors[theme].mutedForeground;
+  
+  // Animation value for press feedback
+  const [pressAnim] = React.useState(new Animated.Value(1));
+  
   const handlePress = () => {
+    // Animated press feedback
+    Animated.sequence([
+      Animated.timing(pressAnim, {
+        toValue: 0.9,
+        duration: 50,
+        useNativeDriver: true
+      }),
+      Animated.timing(pressAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      })
+    ]).start();
+    
     // Provide haptic feedback on press
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
     // Call the original onPress handler
     if (props.onPress) {
-      // The TabTrigger component expects this function to be called without arguments
       props.onPress();
     }
   };
@@ -43,20 +65,71 @@ export function TabButton({
     <Pressable
       {...props}
       onPress={handlePress}
-      className={`flex-1 items-center justify-center py-2 ${isDark ? 'bg-background' : 'bg-white'}`}
+      style={[styles.container]}
+      className={props.className}
     >
-      <View className="items-center">
+      <Animated.View style={[
+        styles.content,
+        {
+          transform: [{ scale: pressAnim }]
+        }
+      ]}>
+        {/* Circular background when focused */}
+        {isFocused && (
+          <View style={[
+            styles.circleHighlight,
+            { backgroundColor: primaryLightColor }
+          ]} />
+        )}
+        
         <Ionicons 
           name={icon as any} 
           size={24} 
-          color={isFocused ? '#7C3AED' : isDark ? '#888888' : '#666666'} 
+          color={isFocused ? primaryColor : mutedColor} 
+          style={styles.icon}
         />
+        
         <Text 
-          className={`mt-1 text-xs ${isFocused ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+          className={isFocused ? 'text-primary font-medium' : 'text-muted-foreground'}
+          style={styles.label}
         >
           {label}
         </Text>
-      </View>
+      </Animated.View>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  content: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 60,
+    width: 60,
+  },
+  circleHighlight: {
+    position: 'absolute',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    zIndex: -1,
+    // Add shadow for neomorphic effect
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  icon: {
+    marginBottom: 4,
+  },
+  label: {
+    fontSize: 12,
+  }
+});

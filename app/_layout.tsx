@@ -7,8 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NAV_THEME } from '@/lib/constants';
-import { useColorScheme } from '@/lib/useColorScheme';
+import { Colors } from '@/constants/Colors';
 import { PortalHost } from '@rn-primitives/portal';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { setAndroidNavigationBar } from '@/lib/android-navigation-bar';
@@ -16,11 +15,26 @@ import { useThemeStore, useInitializeTheme } from '@/store/themeStore';
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
-  colors: NAV_THEME.light,
+  colors: {
+    background: Colors.light.background,
+    border: Colors.light.border,
+    card: Colors.light.card,
+    notification: Colors.light.destructive,
+    primary: Colors.light.primary,
+    text: Colors.light.foreground,
+  },
 };
+
 const DARK_THEME: Theme = {
   ...DarkTheme,
-  colors: NAV_THEME.dark,
+  colors: {
+    background: Colors.dark.background,
+    border: Colors.dark.border,
+    card: Colors.dark.card,
+    notification: Colors.dark.destructive,
+    primary: Colors.dark.primary,
+    text: Colors.dark.foreground,
+  },
 };
 
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
@@ -34,8 +48,7 @@ export {
 
 export default function RootLayout() {
   const hasMounted = React.useRef(false);
-  const { colorScheme, isDarkColorScheme } = useColorScheme();
-  const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
+  const [isThemeLoaded, setIsThemeLoaded] = React.useState(false);
   
   // Initialize theme from system preference
   useInitializeTheme();
@@ -52,11 +65,11 @@ export default function RootLayout() {
       document.documentElement.classList.add('bg-background');
     }
     setAndroidNavigationBar(isDarkTheme ? 'dark' : 'light');
-    setIsColorSchemeLoaded(true);
+    setIsThemeLoaded(true);
     hasMounted.current = true;
   }, [isDarkTheme]);
 
-  if (!isColorSchemeLoaded) {
+  if (!isThemeLoaded) {
     return null;
   }
 
