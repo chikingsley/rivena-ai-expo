@@ -12,6 +12,7 @@ export const Colors = {
     cardForeground: '#11181C',
     popover: '#ffffff',
     popoverForeground: '#11181C',
+    shadow: '#000000', // shadow color for light theme
     
     // Purple theme colors
     primary: 'hsl(270.7, 91%, 65.1%)', // dark purple
@@ -26,8 +27,8 @@ export const Colors = {
     // UI colors
     secondary: '#f4f4f5',
     secondaryForeground: '#18181b',
-    muted: '#f4f4f5',
-    mutedForeground: '#71717a',
+    muted: '#404040', // slightly darker for better visibility on white
+    mutedForeground: '#6b7280', // darker gray for better contrast
     destructive: '#ef4444',
     destructiveForeground: '#ffffff',
     border: '#e4e4e7',
@@ -35,7 +36,7 @@ export const Colors = {
     ring: 'hsl(270.7, 91%, 65.1%)',
     
     // Tab navigation
-    tabIconDefault: '#71717a',
+    tabIconDefault: '#6b7280', // darker gray for better visibility
     tabIconSelected: 'hsl(270.7, 91%, 65.1%)',
   },
   dark: {
@@ -46,6 +47,7 @@ export const Colors = {
     cardForeground: '#f8f8f8',
     popover: '#27272a',
     popoverForeground: '#f8f8f8',
+    shadow: '#000000', // shadow color for dark theme
     
     // Purple theme colors
     primary: 'hsl(270.7, 91%, 65.1%)', // dark purple
@@ -60,7 +62,7 @@ export const Colors = {
     // UI colors
     secondary: '#27272a',
     secondaryForeground: '#f8f8f8',
-    muted: '#27272a',
+    muted: '#3f3f46', // slightly lighter for better visibility
     mutedForeground: '#a1a1aa',
     destructive: '#ef4444',
     destructiveForeground: '#f8f8f8',
