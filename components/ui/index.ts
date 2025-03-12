@@ -6,5 +6,5 @@ export { Checkbox } from './checkbox';
 export { Progress } from './progress';
 export { Text, TextClassContext } from './text';
 export { Tooltip, TooltipContent, TooltipTrigger } from './tooltip';
-export { default as TabBarBackground } from './TabBarBackground';
-export { MessageBubble } from './MessageBubble';
+export { default as TabBarBackground } from '../TabBarBackground';
+export { MessageBubble } from '../MessageBubble';

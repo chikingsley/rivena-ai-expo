@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Pressable } from 'react-native';
-import { Text } from './text';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './card';
-import { Button } from './button';
+import { Text } from './ui/text';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 
