@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInUp, FadeOutDown, LayoutAnimationConfig } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '@/store/themeStore';
@@ -25,6 +26,7 @@ const GITHUB_AVATAR_URI =
 
 export default function Screen() {
   const { theme } = useThemeStore();
+  const insets = useSafeAreaInsets();
   const [progress, setProgress] = React.useState(78);
   const [selectedDate, setSelectedDate] = React.useState<Date>(new Date());
 
@@ -51,24 +53,27 @@ export default function Screen() {
     // Navigate to notifications or open notifications modal
   };
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
+      {/* Safe area padding for top */}
+      <View style={{ height: insets.top }} />
+      
       {/* Header */}
       <Header 
         username="Rick Sanchez"
-        onSettingsPress={handleSettingsPress}
-        onNotificationsPress={handleNotificationsPress}
+        streak={7}
+        onProfilePress={() => console.log('Profile pressed')}
       />
       
       {/* Calendar Section */}
-      <View style={styles.calendarContainer}>
+      <View style={styles.calendarSection}>
         <WeeklyCalendar 
           onDateSelect={handleDateSelect}
           initialDate={selectedDate}
         />
       </View>
       
-      {/* Original Content */}
-      <View className='flex-1 justify-center items-center gap-5 p-6 bg-secondary/30'>
+      {/* Card Content */}
+      <View style={styles.cardContainer}>
       <Card className='w-full max-w-sm p-6 rounded-2xl'>
         <CardHeader className='items-center'>
           <Avatar alt="Rick Sanchez's Avatar" className='w-24 h-24'>
@@ -133,7 +138,7 @@ export default function Screen() {
         </CardFooter>
       </Card>
     </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -142,7 +147,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
-  calendarContainer: {
-    height: 300, // Fixed height for calendar
+  calendarSection: {
+    marginTop: 8,
+    marginBottom: 16,
+  },
+  cardContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+    padding: 24,
+    backgroundColor: Colors.light.secondary + '4D', // 30% opacity
   },
 });

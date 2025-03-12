@@ -1,19 +1,21 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 interface HeaderProps {
   username?: string;
-  onSettingsPress?: () => void;
-  onNotificationsPress?: () => void;
+  profileImage?: string;
+  streak?: number;
+  onProfilePress?: () => void;
 }
 
 export function Header({ 
   username = 'User', 
-  onSettingsPress, 
-  onNotificationsPress 
+  profileImage,
+  streak = 0,
+  onProfilePress
 }: HeaderProps) {
   const { theme } = useThemeStore();
   
@@ -30,46 +32,56 @@ export function Header({
     }
   };
   
+  // Get current day name
+  const getDayName = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[new Date().getDay()];
+  };
+  
   return (
-    <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
-      {/* Left side - Greeting */}
+    <View style={[styles.container, { backgroundColor: 'transparent' }]}>
+      {/* Left side - Streak */}
+      <View style={styles.streakContainer}>
+        <View style={[styles.streakBadge, { backgroundColor: Colors[theme].accent }]}>
+          <Ionicons 
+            name="flame" 
+            size={18} 
+            color="white" 
+          />
+          <Text style={styles.streakText}>{streak}</Text>
+        </View>
+      </View>
+      
+      {/* Middle - Greeting and Day */}
       <View style={styles.greetingContainer}>
-        <Text style={[styles.greeting, { color: Colors[theme].muted }]}>
+        <Text style={[styles.greeting, { color: Colors[theme].foreground }]}>
           {getGreeting()}
         </Text>
-        <Text style={[styles.username, { color: Colors[theme].foreground }]}>
-          {username}
+        <Text style={[styles.dayText, { color: Colors[theme].muted }]}>
+          {getDayName()}
         </Text>
       </View>
       
-      {/* Right side - Icons */}
-      <View style={styles.iconsContainer}>
-        <TouchableOpacity 
-          style={styles.iconButton} 
-          onPress={onNotificationsPress}
-        >
-          <Ionicons 
-            name="notifications-outline" 
-            size={24} 
-            color={Colors[theme].foreground} 
-          />
-          {/* Notification badge - can be conditionally rendered */}
-          <View style={[styles.badge, { backgroundColor: Colors[theme].primary }]}>
-            <Text style={styles.badgeText}>2</Text>
-          </View>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.iconButton} 
-          onPress={onSettingsPress}
-        >
-          <Ionicons 
-            name="settings-outline" 
-            size={24} 
-            color={Colors[theme].foreground} 
-          />
-        </TouchableOpacity>
-      </View>
+      {/* Right side - Profile Image */}
+      <TouchableOpacity 
+        style={styles.profileContainer}
+        onPress={onProfilePress}
+      >
+        <View style={[styles.profileCircle, { borderColor: Colors[theme].primary }]}>
+          {profileImage ? (
+            <Image 
+              source={{ uri: profileImage }} 
+              style={styles.profileImage} 
+            />
+          ) : (
+            <View style={[styles.profilePlaceholder, { backgroundColor: Colors[theme].primaryLight }]}>
+              <Text style={[styles.profileInitial, { color: Colors[theme].primary }]}>
+                {username.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -82,40 +94,65 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
+  profileContainer: {
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  profilePlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileInitial: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
   greetingContainer: {
     flex: 1,
+    alignItems: 'center',
   },
   greeting: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 2,
+  },
+  dayText: {
     fontSize: 14,
-    marginBottom: 4,
   },
-  username: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  iconsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconButton: {
-    padding: 8,
-    marginLeft: 8,
-    position: 'relative',
-  },
-  badge: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
-    alignItems: 'center',
+  streakContainer: {
+    width: 60,
+    height: 50,
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    alignItems: 'center',
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
+  streakBadge: {
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  streakText: {
+    color: 'white',
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 5,
   },
 });
