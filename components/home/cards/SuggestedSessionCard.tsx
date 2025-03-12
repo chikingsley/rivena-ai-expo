@@ -1,0 +1,113 @@
+import React from 'react';
+import { Pressable, StyleSheet } from 'react-native';
+import { useThemeStore } from '@/store/themeStore';
+import { Colors } from '@/constants/Colors';
+import { Card, CardContent } from '@/components/ui/card';
+import { Text } from '@/components/ui/text';
+import { View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+
+interface SuggestedSessionCardProps {
+  title: string;
+  description: string;
+  duration: string;
+  type: string;
+  iconName: keyof typeof Ionicons.glyphMap;
+  iconColor?: string;
+  onPress?: () => void;
+}
+
+export function SuggestedSessionCard({ 
+  title, 
+  description, 
+  duration, 
+  type, 
+  iconName, 
+  iconColor,
+  onPress 
+}: SuggestedSessionCardProps) {
+  const { theme } = useThemeStore();
+  
+  // Use provided color or default to primary
+  const color = iconColor || Colors[theme].primary;
+  
+  return (
+    <Pressable 
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.cardWrapper,
+        pressed && styles.pressed
+      ]}
+    >
+      <Card className="rounded-xl overflow-hidden w-full">
+        <CardContent className="p-4">
+          <View style={styles.contentContainer}>
+            <View style={[
+              styles.iconCircle, 
+              { backgroundColor: `${color}20` } // 20% opacity
+            ]}>
+              <Ionicons 
+                name={iconName} 
+                size={20} 
+                color={color} 
+              />
+            </View>
+            
+            <View style={styles.textContainer}>
+              <Text className="text-sm text-muted-foreground">{description}</Text>
+              <Text className="text-base font-semibold mb-1">{title}</Text>
+              <Text className="text-sm text-muted-foreground">
+                {duration} • {type}
+              </Text>
+            </View>
+            
+            <View style={[
+              styles.arrowCircle, 
+              { backgroundColor: Colors[theme].primary }
+            ]}>
+              <Ionicons 
+                name="arrow-forward" 
+                size={18} 
+                color="white" 
+              />
+            </View>
+          </View>
+        </CardContent>
+      </Card>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  cardWrapper: {
+    width: '100%',
+    marginBottom: 12,
+    transform: [{ translateY: 0 }],
+  },
+  pressed: {
+    transform: [{ translateY: -2 }],
+    opacity: 0.95,
+  },
+  contentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textContainer: {
+    flex: 1,
+    marginHorizontal: 12,
+  },
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  }
+});
