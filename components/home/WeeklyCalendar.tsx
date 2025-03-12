@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { CalendarProvider, CalendarUtils, WeekCalendar, DateData } from 'react-native-calendars';
 import { useThemeStore } from '@/store/themeStore';
