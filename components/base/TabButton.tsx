@@ -35,7 +35,9 @@ export function TabButton({ iconName, label, routePath, isFocused: forcedFocus }
         { 
           backgroundColor: isFocused ? Colors[theme].primaryLight : 'transparent',
           borderColor: isFocused ? Colors[theme].primary : 'transparent',
-          borderWidth: isFocused ? 1 : 0
+          borderWidth: isFocused ? 1 : 0,
+          // Ensure the button is properly sized
+          width: '100%',
         }
       ]}>
         <Ionicons
@@ -62,7 +64,9 @@ export function TabButton({ iconName, label, routePath, isFocused: forcedFocus }
 
 const styles = StyleSheet.create({
   tabItem: {
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   buttonContainer: {
     flexDirection: 'column',
@@ -72,6 +76,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
     minWidth: 60,
+    minHeight: 48,
   },
   icon: {
     marginBottom: 4
