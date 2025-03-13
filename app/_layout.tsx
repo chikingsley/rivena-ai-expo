@@ -1,8 +1,6 @@
 import '@/global.css';
 
 import { ConvexProvider, ConvexReactClient } from "convex/react";
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Drawer } from 'expo-router/drawer';
 import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -75,41 +73,19 @@ export default function RootLayout() {
   }
 
   return (
-    // <ConvexProvider client={convex}>
-    //   <ThemeProvider value={isDarkTheme ? DARK_THEME : LIGHT_THEME}>
-    //     <SafeAreaProvider>
-    //       <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
-    //       <Stack>
-    //         <Stack.Screen
-    //           name='(tabs)'
-    //           options={{
-    //             headerShown: false,
-    //           }}
-    //         />
-
-    //       </Stack>
-    //       <PortalHost />
-    //     </SafeAreaProvider>
-    //   </ThemeProvider>
-    // </ConvexProvider>
-    <GestureHandlerRootView style={{ flex: 1 }}>
-    <Drawer>
-      <Drawer.Screen
-        name="index" // This is the name of the page and must match the url from root
-        options={{
-          drawerLabel: 'Home',
-          title: 'overview',
-        }}
-      />
-      <Drawer.Screen
-        name="user/[id]" // This is the name of the page and must match the url from root
-        options={{
-          drawerLabel: 'User',
-          title: 'overview',
-        }}
-      />
-    </Drawer>
-  </GestureHandlerRootView>
+    <ConvexProvider client={convex}>
+      <ThemeProvider value={isDarkTheme ? DARK_THEME : LIGHT_THEME}>
+        <SafeAreaProvider>
+          <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
+          <Stack>
+            <Stack.Screen name='(tabs)' options={{ headerShown: false }} />
+            <Stack.Screen name='(aux)' options={{ headerShown: false }} />
+            <Stack.Screen name='(auth)' options={{ headerShown: false }} />
+          </Stack>
+          <PortalHost />
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </ConvexProvider>
   );
 }
 

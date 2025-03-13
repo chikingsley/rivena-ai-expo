@@ -19,6 +19,10 @@ export const Colors = {
     popoverForeground: '#11181C',
     shadow: '#000000', // shadow color for light theme
 
+    // FAB colors
+    FAB: 'hsl(270.7, 91%, 65.1%)',
+    FABBorder: 'transparent', 
+
     // Text colors
     text: '#11181C',
     textmuted: '#a1a1aa',
@@ -62,10 +66,14 @@ export const Colors = {
     cardFocus: '#1f1f1f',
     cardForeground: '#f8f8f8',
 
+    // FAB colors
+    FAB: 'black',
+    FABBorder: 'hsl(270.7, 91%, 65.1%)', // dark purple
+
     // Popover colors
     popover: '#27272a',
     popoverForeground: '#f8f8f8',
-    shadow: '#000000', // shadow color for dark theme
+    shadow: '#ffffff', // shadow color for dark theme
     
     // Purple theme colors
     primary: 'hsl(270.7, 91%, 75%)', // dark purple

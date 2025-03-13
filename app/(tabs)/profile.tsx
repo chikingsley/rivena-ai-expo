@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   menuContainer: {
-    marginVertical: 8,
+    marginVertical: 0,
   },
   menuItem: {
     flexDirection: 'row',

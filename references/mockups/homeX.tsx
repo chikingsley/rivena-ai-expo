@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import VoiceChat from '../../components/voice-chat/VoiceChat';
+import VoiceChat from '../../components/session/VoiceChat';
 
 export default function Voice2Screen() {
   return (
