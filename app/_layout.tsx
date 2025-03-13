@@ -1,6 +1,8 @@
 import '@/global.css';
 
 import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Drawer } from 'expo-router/drawer';
 import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -9,7 +11,6 @@ import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { PortalHost } from '@rn-primitives/portal';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { setAndroidNavigationBar } from '@/lib/android-navigation-bar';
 import { useThemeStore, useInitializeTheme } from '@/store/themeStore';
 
@@ -74,22 +75,41 @@ export default function RootLayout() {
   }
 
   return (
-    <ConvexProvider client={convex}>
-      <ThemeProvider value={isDarkTheme ? DARK_THEME : LIGHT_THEME}>
-        <SafeAreaProvider>
-          <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
-          <Stack>
-            <Stack.Screen
-              name='(tabs)'
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack>
-          <PortalHost />
-        </SafeAreaProvider>
-      </ThemeProvider>
-    </ConvexProvider>
+    // <ConvexProvider client={convex}>
+    //   <ThemeProvider value={isDarkTheme ? DARK_THEME : LIGHT_THEME}>
+    //     <SafeAreaProvider>
+    //       <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
+    //       <Stack>
+    //         <Stack.Screen
+    //           name='(tabs)'
+    //           options={{
+    //             headerShown: false,
+    //           }}
+    //         />
+
+    //       </Stack>
+    //       <PortalHost />
+    //     </SafeAreaProvider>
+    //   </ThemeProvider>
+    // </ConvexProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+    <Drawer>
+      <Drawer.Screen
+        name="index" // This is the name of the page and must match the url from root
+        options={{
+          drawerLabel: 'Home',
+          title: 'overview',
+        }}
+      />
+      <Drawer.Screen
+        name="user/[id]" // This is the name of the page and must match the url from root
+        options={{
+          drawerLabel: 'User',
+          title: 'overview',
+        }}
+      />
+    </Drawer>
+  </GestureHandlerRootView>
   );
 }
 

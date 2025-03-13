@@ -24,7 +24,7 @@ const SUGGESTED_SESSIONS: SessionSuggestion[] = [
     description: 'Continuing from Monday',
     duration: '15 min',
     type: 'Deep Exploration',
-    iconName: 'brain',
+    iconName: 'bulb-outline',
     iconColor: '#7C3AED' // Purple
   },
   {

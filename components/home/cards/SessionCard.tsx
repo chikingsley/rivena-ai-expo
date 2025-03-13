@@ -10,11 +10,12 @@ import { Ionicons } from '@expo/vector-icons';
 interface SessionCardProps {
   title: string;
   subtitle: string;
+  subtitleWidth?: string;
   iconName: keyof typeof Ionicons.glyphMap;
   onPress?: () => void;
 }
 
-export function SessionCard({ title, subtitle, iconName, onPress }: SessionCardProps) {
+export function SessionCard({ title, subtitle, subtitleWidth, iconName, onPress }: SessionCardProps) {
   const { theme } = useThemeStore();
   const [isPressed, setIsPressed] = useState(false);
   
@@ -27,10 +28,24 @@ export function SessionCard({ title, subtitle, iconName, onPress }: SessionCardP
     >
       <Card 
         className={`flex-1 justify-center rounded-xl pt-8 pb-4 overflow-hidden ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}
+        style={{ backgroundColor: Colors[theme].card, borderWidth: 0 }}
       >
         <CardContent className="p-6 flex-col items-center justify-center">
-          <Text className="text-2xl font-bold mb-1 text-center">{title}</Text>
-          <Text className="text-muted-foreground text-lg mb-4 px-4 text-center">{subtitle}</Text>
+          {/*Header Text*/}
+          <Text 
+            className="text-2xl font-bold mb-1 text-center"
+            style={{ color: Colors[theme].text }}
+          >
+            {title}
+          </Text>
+          {/*Subtitle Text*/}
+          <Text 
+            className={`text-lg mb-4 ${subtitleWidth || 'w-full'} text-center`}
+            style={{ color: Colors[theme].textmuted }}
+          >
+            {subtitle}
+          </Text>
+          {/*Icon*/}
           <View style={styles.iconContainer}>
               <Ionicons 
                 name={iconName} 

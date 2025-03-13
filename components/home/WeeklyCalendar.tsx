@@ -193,7 +193,8 @@ export function WeeklyCalendar({ onDateSelect, initialDate = new Date() }: Weekl
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    backgroundColor: 'transparent'
+    backgroundColor: 'transparent',
+    marginTop: 10
   },
   weekCalendar: {
     height: 50, // Increased height for the calendar

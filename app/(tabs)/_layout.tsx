@@ -57,55 +57,55 @@ export default function TabLayout() {
       console.log(`Set active tab ${tabName} indicator: x=${x}, width=${width}`);
       
       // Also trigger animation to ensure it's visible
-      animateToActiveTab();
+      // animateToActiveTab();
     }
   };
   
   // Animate the indicator to the active tab
-  const animateToActiveTab = () => {
-    const activeTabName = getActiveTabName();
-    const activeTab = tabMeasurements[activeTabName];
+  // const animateToActiveTab = () => {
+  //   const activeTabName = getActiveTabName();
+  //   const activeTab = tabMeasurements[activeTabName];
     
-    if (activeTab?.measured) {
-      console.log(`Animating to tab ${activeTabName}: x=${activeTab.x}, width=${activeTab.width}`);
+  //   if (activeTab?.measured) {
+  //     console.log(`Animating to tab ${activeTabName}: x=${activeTab.x}, width=${activeTab.width}`);
       
-      // Use withSpring for smooth animation
-      indicatorX.value = withSpring(activeTab.x, {
-        damping: 20,
-        stiffness: 300,
-        mass: 1,
-        overshootClamping: false,
-      });
+  //     // Use withSpring for smooth animation
+  //     indicatorX.value = withSpring(activeTab.x, {
+  //       damping: 20,
+  //       stiffness: 300,
+  //       mass: 1,
+  //       overshootClamping: false,
+  //     });
       
-      indicatorWidth.value = withSpring(activeTab.width, {
-        damping: 20,
-        stiffness: 300,
-        mass: 1,
-        overshootClamping: false,
-      });
-    } else {
-      console.log(`Tab ${activeTabName} not measured yet`); 
-    }
-  };
+  //     indicatorWidth.value = withSpring(activeTab.width, {
+  //       damping: 20,
+  //       stiffness: 300,
+  //       mass: 1,
+  //       overshootClamping: false,
+  //     });
+  //   } else {
+  //     console.log(`Tab ${activeTabName} not measured yet`); 
+  //   }
+  // };
   
   // Update indicator when route changes
-  useEffect(() => {
-    console.log(`Route changed to: ${pathname}`);
-    // Use a small timeout to ensure measurements are complete
-    setTimeout(() => {
-      animateToActiveTab();
-    }, 50);
-  }, [pathname]);
+  // useEffect(() => {
+  //   console.log(`Route changed to: ${pathname}`);
+  //   // Use a small timeout to ensure measurements are complete
+  //   setTimeout(() => {
+  //     animateToActiveTab();
+  //   }, 50);
+  // }, [pathname]);
   
   // Run initial animation after a short delay to ensure measurements are complete
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      console.log('Initial animation timeout fired');
-      animateToActiveTab();
-    }, 500); // Longer timeout for initial load
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     console.log('Initial animation timeout fired');
+  //     animateToActiveTab();
+  //   }, 500); // Longer timeout for initial load
     
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
   
   // // Animated style for the indicator
   // const indicatorStyle = useAnimatedStyle(() => {
@@ -145,7 +145,7 @@ export default function TabLayout() {
             <TabButton iconName="calendar" label="History" routePath="/history" />
           </TabTrigger>
           <TabTrigger name="new-session" href="/sessions/new">
-            <TabButton iconName="add" label="New Session" routePath="/sessions/new" />
+            <TabButton iconName="add" label="New Session"/>
           </TabTrigger>
           <TabTrigger name="insights" href="/insights">
             <TabButton iconName="stats-chart" label="Insights" routePath="/insights" />
@@ -181,7 +181,7 @@ export default function TabLayout() {
             paddingBottom: insets.bottom || 16,
             borderTopColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
             // Neomorphic shadow effect
-            shadowColor: Colors[theme].shadow,
+            // shadowColor: Colors[theme].shadow,
           }]}
         >
           {/* Animated indicator that moves between tabs */}

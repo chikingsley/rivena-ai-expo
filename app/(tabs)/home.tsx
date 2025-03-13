@@ -52,16 +52,19 @@ export default function Screen() {
       </View>
       
       {/* Session Cards */}
+      {/*TODO: lets have these programmatically set by the Agent*/}
       <View style={styles.sessionCardsContainer}>
         <SessionCard
-          title="Morning Reflection"
-          subtitle="Start your day mindfully"
+          title="Let's start your day"
+          subtitle="with morning preparation"
+          subtitleWidth="w-[70%]"
           iconName="sunny"
           onPress={() => handleSessionPress('morning')}
         />
         <SessionCard
-          title="Evening Wind Down"
-          subtitle="Reflect on your day"
+          title="Evening Reflection"
+          subtitle="Sum up your day"
+          subtitleWidth="w-[60%]"
           iconName="moon"
           onPress={() => handleSessionPress('evening')}
         />

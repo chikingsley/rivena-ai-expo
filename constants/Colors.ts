@@ -6,13 +6,22 @@
 export const Colors = {
   light: {
     // Base colors
-    background: '#ffffff', // white
+    background: '#f2f3f3', // white
     foreground: '#11181C', // dark text
+
+    // Card colors
     card: '#ffffff',
+    cardFocus: '#ffffff',
     cardForeground: '#11181C',
+
+    // Popover colors
     popover: '#ffffff',
     popoverForeground: '#11181C',
     shadow: '#000000', // shadow color for light theme
+
+    // Text colors
+    text: '#11181C',
+    textmuted: '#a1a1aa',
     
     // Purple theme colors
     primary: 'hsl(270.7, 91%, 65.1%)', // dark purple
@@ -41,17 +50,26 @@ export const Colors = {
   },
   dark: {
     // Base colors
-    background: 'hsl(260, 15%, 10%)', // dark background
+    background: '#000000', // dark background
     foreground: '#f8f8f8', // light text
-    card: '#27272a',
+
+    // Text colors
+    text: '#ffffff',  
+    textmuted: '#a1a1aa',
+
+    // Card colors
+    card: '#121212',
+    cardFocus: '#1f1f1f',
     cardForeground: '#f8f8f8',
+
+    // Popover colors
     popover: '#27272a',
     popoverForeground: '#f8f8f8',
     shadow: '#000000', // shadow color for dark theme
     
     // Purple theme colors
-    primary: 'hsl(270.7, 91%, 65.1%)', // dark purple
-    primaryLight: 'hsl(268.6, 100%, 91.8%)', // light purple
+    primary: 'hsl(270.7, 91%, 75%)', // dark purple
+    primaryLight: 'transparent', // light purple
     primaryForeground: '#ffffff',
     
     // Gold theme colors
