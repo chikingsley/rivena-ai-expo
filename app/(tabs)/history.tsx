@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Header } from '@/components/home/Header';
 
 interface HistoryItemProps {
   title: string;

@@ -10,11 +10,7 @@ import '@/polyfills';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import { useSharedValue, withSpring } from 'react-native-reanimated';
 
 export default function TabLayout() {
   const { theme } = useThemeStore();
@@ -148,9 +144,9 @@ export default function TabLayout() {
           <TabTrigger name="history" href="/history">
             <TabButton iconName="calendar" label="History" routePath="/history" />
           </TabTrigger>
-          {/* <TabTrigger name="new-session" href="/new-session">
-            <TabButton iconName="add" label="New Session" routePath="/new-session" />
-          </TabTrigger> */}
+          <TabTrigger name="new-session" href="/sessions/new">
+            <TabButton iconName="add" label="New Session" routePath="/sessions/new" />
+          </TabTrigger>
           <TabTrigger name="insights" href="/insights">
             <TabButton iconName="stats-chart" label="Insights" routePath="/insights" />
           </TabTrigger>
