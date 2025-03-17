@@ -19,7 +19,7 @@ const SPRING_CONFIG = {
 
 const OFFSET = 60;
 
-const FloatingActionButton = ({ isExpanded, index, buttonLetter }) => {
+const FloatingActionButton = ({ isExpanded, index, buttonLetter }: { isExpanded: any, index: number, buttonLetter: string }) => {
   const animatedStyles = useAnimatedStyle(() => {
     // highlight-next-line
     const moveValue = isExpanded.value ? OFFSET * index : 0;

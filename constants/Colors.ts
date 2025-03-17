@@ -22,6 +22,7 @@ export const Colors = {
     // FAB colors
     FAB: 'hsl(270.7, 91%, 65.1%)',
     FABBorder: 'transparent', 
+    transparent: 'transparent',
 
     // Text colors
     text: '#11181C',
@@ -69,6 +70,8 @@ export const Colors = {
     // FAB colors
     FAB: 'black',
     FABBorder: 'hsl(270.7, 91%, 65.1%)', // dark purple
+    transparent: 'transparent',
+
 
     // Popover colors
     popover: '#27272a',
