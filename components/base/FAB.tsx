@@ -97,22 +97,55 @@ export function FAB({ iconName }: FABProps) {
   });
 
   // Create a function to generate card animated styles
-  const createCardAnimatedStyle = (index: number, rotationDeg: string) => {
+  const createCardAnimatedStyle = (animationIndex: number, rotationDeg: string) => {
     return useAnimatedStyle(() => {
-      const delay = index * 50;
+      // Use reversed index to make left card animate first (2-animationIndex)
+      // This makes index 0 (left card) have the largest delay value (2-0=2)
+      const delay = (2 - animationIndex) * 50;
 
+      // Initial state - ensure cards are hidden when collapsed
+      if (!isExpanded.value) {
+        return {
+          opacity: 0,
+          display: 'none',
+          transform: [
+            { scale: 0 },
+            { rotate: rotationDeg },
+            { translateX: 0 }
+          ],
+        };
+      }
+      
       return {
+        opacity: withDelay(
+          delay,
+          withTiming(1, {
+            duration: 300,
+            easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+          })
+        ),
+        display: 'flex',
         transform: [
           {
             scale: withDelay(
               delay,
-              withTiming(isExpanded.value ? 1 : 0, {
+              withTiming(1, {
                 duration: 300,
                 easing: Easing.bezier(0.25, 0.1, 0.25, 1),
               })
             )
           },
-          { rotate: rotationDeg }
+          { rotate: rotationDeg },
+          // Add translateX animation to enhance left-to-right effect
+          {
+            translateX: withDelay(
+              delay,
+              withTiming(0, {
+                duration: 300,
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              })
+            )
+          }
         ],
       };
     });
@@ -137,8 +170,12 @@ export function FAB({ iconName }: FABProps) {
           let shadowStyle = {};
           let cardAnimatedStyle;
 
+          // Determine animation index based on left-to-right order
+          let animationIndex;
+          
           // Left card (index 0)
           if (index === 0) {
+            animationIndex = 0; // First to animate (leftmost)
             cardStyle = {
               left: '12%',
               bottom: '90%', // Position directly above FAB
@@ -151,10 +188,11 @@ export function FAB({ iconName }: FABProps) {
               elevation: 3
             };
             // Get animated style for this card with rotation
-            cardAnimatedStyle = createCardAnimatedStyle(index, '5deg');
+            cardAnimatedStyle = createCardAnimatedStyle(animationIndex, '5deg');
           }
           // Middle card (index 1) - positioned higher
           else if (index === 1) {
+            animationIndex = 1; // Second to animate (middle)
             cardStyle = {
               bottom: '100%', // Position directly above FAB, slightly higher
               marginLeft: -65, // Half of card width
@@ -167,10 +205,11 @@ export function FAB({ iconName }: FABProps) {
               elevation: 8
             };
             // Get animated style for this card with rotation
-            cardAnimatedStyle = createCardAnimatedStyle(index, '0deg');
+            cardAnimatedStyle = createCardAnimatedStyle(animationIndex, '0deg');
           }
           // Right card (index 2)
           else if (index === 2) {
+            animationIndex = 2; // Last to animate (rightmost)
             cardStyle = {
               right: '12%',
               bottom: '90%', // Position directly above FAB
@@ -183,7 +222,7 @@ export function FAB({ iconName }: FABProps) {
               elevation: 5
             };
             // Get animated style for this card with rotation
-            cardAnimatedStyle = createCardAnimatedStyle(index, '-5deg');
+            cardAnimatedStyle = createCardAnimatedStyle(animationIndex, '-5deg');
           }
 
           return (
@@ -194,7 +233,7 @@ export function FAB({ iconName }: FABProps) {
                 {
                   backgroundColor: Colors[theme].card,
                   borderColor: Colors[theme].border,
-                  opacity: 1, // Ensure cards are fully opaque
+                  // Remove static opacity here since it's handled in the animated style
                 },
                 cardStyle,
                 shadowStyle,
