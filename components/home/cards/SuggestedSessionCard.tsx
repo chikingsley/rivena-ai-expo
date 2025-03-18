@@ -96,7 +96,7 @@ export function SuggestedSessionCard({
 const styles = StyleSheet.create({
   cardWrapper: {
     width: '100%',
-    marginBottom: 12,
+    marginBottom: 4,
     marginHorizontal: 2, // Add slight margin to prevent shadow clipping
   },
   contentContainer: {

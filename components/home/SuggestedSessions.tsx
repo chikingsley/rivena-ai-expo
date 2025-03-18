@@ -84,8 +84,8 @@ export function SuggestedSessions({ onSessionPress }: SuggestedSessionsProps) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
   sectionTitle: {
     fontSize: 12,
@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   cardsContainer: {
-    gap: 8,
+    gap: 0,
   }
 });

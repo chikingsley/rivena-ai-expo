@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   sessionCardsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 0,
     gap: 12,
   },
 });

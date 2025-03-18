@@ -27,7 +27,7 @@ export function SessionCard({ title, subtitle, subtitleWidth, iconName, onPress 
       style={styles.cardWrapper}
     >
       <Card 
-        className={`flex-1 justify-center rounded-xl pt-8 pb-4 overflow-hidden ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}
+        className={`flex-1 justify-center rounded-xl pt-4 pb-2 overflow-hidden ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}
         style={{ backgroundColor: Colors[theme].card, borderWidth: 0 }}
       >
         <CardContent className="p-6 flex-col items-center justify-center">
