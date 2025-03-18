@@ -55,7 +55,7 @@ export function SuggestedSessions({ onSessionPress }: SuggestedSessionsProps) {
   const { theme } = useThemeStore();
   
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <Text style={[
         styles.sectionTitle,
         { color: Colors[theme].muted }
@@ -72,7 +72,7 @@ export function SuggestedSessions({ onSessionPress }: SuggestedSessionsProps) {
             duration={session.duration}
             type={session.type}
             iconName={session.iconName as any}
-            iconColor={session.iconColor}
+            iconColor={session.iconColor || Colors[theme].primary}
             onPress={() => onSessionPress?.(session)}
           />
         ))}

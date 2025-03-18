@@ -10,6 +10,7 @@ import Animated, {
   useSharedValue,
   withTiming,
   withSpring,
+  withDelay,
   interpolate,
   Easing,
 } from 'react-native-reanimated';
@@ -101,18 +102,15 @@ export function FAB({ iconName }: FABProps) {
       const delay = index * 50;
 
       return {
-        opacity: withTiming(isExpanded.value ? 1 : 0, {
-          duration: 300,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-          delay,
-        }),
         transform: [
           {
-            scale: withTiming(isExpanded.value ? 1 : 0, {
-              duration: 300,
-              easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+            scale: withDelay(
               delay,
-            })
+              withTiming(isExpanded.value ? 1 : 0, {
+                duration: 300,
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+              })
+            )
           },
           { rotate: rotationDeg }
         ],
@@ -142,8 +140,8 @@ export function FAB({ iconName }: FABProps) {
           // Left card (index 0)
           if (index === 0) {
             cardStyle = {
-              left: '20%',
-              bottom: '20%',
+              left: '12%',
+              bottom: '90%', // Position directly above FAB
               zIndex: 1,
             };
             shadowStyle = {
@@ -153,13 +151,12 @@ export function FAB({ iconName }: FABProps) {
               elevation: 3
             };
             // Get animated style for this card with rotation
-            cardAnimatedStyle = createCardAnimatedStyle(index, '-5deg');
+            cardAnimatedStyle = createCardAnimatedStyle(index, '5deg');
           }
           // Middle card (index 1) - positioned higher
           else if (index === 1) {
             cardStyle = {
-              left: '50%',
-              bottom: '30%',
+              bottom: '100%', // Position directly above FAB, slightly higher
               marginLeft: -65, // Half of card width
               zIndex: 3,
             };
@@ -175,8 +172,8 @@ export function FAB({ iconName }: FABProps) {
           // Right card (index 2)
           else if (index === 2) {
             cardStyle = {
-              right: '20%',
-              bottom: '20%',
+              right: '12%',
+              bottom: '90%', // Position directly above FAB
               zIndex: 2,
             };
             shadowStyle = {
@@ -186,7 +183,7 @@ export function FAB({ iconName }: FABProps) {
               elevation: 5
             };
             // Get animated style for this card with rotation
-            cardAnimatedStyle = createCardAnimatedStyle(index, '5deg');
+            cardAnimatedStyle = createCardAnimatedStyle(index, '-5deg');
           }
 
           return (
@@ -197,6 +194,7 @@ export function FAB({ iconName }: FABProps) {
                 {
                   backgroundColor: Colors[theme].card,
                   borderColor: Colors[theme].border,
+                  opacity: 1, // Ensure cards are fully opaque
                 },
                 cardStyle,
                 shadowStyle,
@@ -267,6 +265,7 @@ const styles = StyleSheet.create({
   fabContainer: {
     width: 66,
     height: 66,
+    bottom: 70,
     borderRadius: 33,
     alignItems: 'center',
     justifyContent: 'center',
@@ -289,10 +288,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    width: 130, // Fixed width for each card
-    height: 150, // Fixed height for each card
+    width: 115, // Fixed width for each card
+    height: 150, // Slightly reduced height for better positioning
     justifyContent: 'center',
-    marginBottom: 200,
     position: 'absolute',
     // Shadow will be applied dynamically based on card position
   },

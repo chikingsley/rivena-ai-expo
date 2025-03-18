@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Pressable, StyleSheet } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { Colors } from '@/constants/Colors';
 import { Card, CardContent } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
-import { View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SuggestedSessionCardProps {
@@ -39,7 +38,10 @@ export function SuggestedSessionCard({
       onPressOut={() => setIsPressed(false)}
       style={styles.cardWrapper}
     >
-      <Card className={`rounded-xl overflow-hidden w-full ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}>
+      <Card 
+        className={`rounded-xl overflow-hidden w-full ${isPressed ? 'shadow-xl shadow-foreground/30 -translate-y-1' : 'shadow-lg shadow-foreground/20'}`}
+        style={{ backgroundColor: Colors[theme].card }}
+      >
         <CardContent className="p-4">
           <View style={styles.contentContainer}>
             <View style={[
@@ -54,9 +56,22 @@ export function SuggestedSessionCard({
             </View>
             
             <View style={styles.textContainer}>
-              <Text className="text-sm text-muted-foreground">{description}</Text>
-              <Text className="text-base font-semibold mb-1">{title}</Text>
-              <Text className="text-sm text-muted-foreground">
+              <Text 
+                className="text-sm text-muted-foreground"
+                style={{ color: Colors[theme].mutedForeground }}
+              >
+                {description}
+              </Text>
+              <Text 
+                className="text-base font-semibold mb-1"
+                style={{ color: Colors[theme].text }}
+              >
+                {title}
+              </Text>
+              <Text 
+                className="text-sm text-muted-foreground"
+                style={{ color: Colors[theme].mutedForeground }}
+              >
                 {duration} • {type}
               </Text>
             </View>
