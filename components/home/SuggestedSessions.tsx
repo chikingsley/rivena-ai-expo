@@ -58,7 +58,7 @@ export function SuggestedSessions({ onSessionPress }: SuggestedSessionsProps) {
     <View style={[styles.container, { backgroundColor: Colors[theme].background }]}>
       <Text style={[
         styles.sectionTitle,
-        { color: Colors[theme].muted }
+        { color: Colors[theme].text, textAlign: 'center' }
       ]}>
         SESSION SUGGESTIONS
       </Text>
@@ -91,8 +91,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 1,
-    marginBottom: 12,
+    marginTop: 12,
+    marginBottom: 6,
     textTransform: 'uppercase',
+    width: '100%', // Ensure the text container spans the full width for proper centering
   },
   cardsContainer: {
     gap: 0,
