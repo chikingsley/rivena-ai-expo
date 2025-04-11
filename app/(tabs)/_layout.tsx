@@ -30,14 +30,8 @@ export default function TabLayout() {
           <TabTrigger name="home" href="/home">
             <TabButton iconName="home" label="Home" routePath="/home" />
           </TabTrigger>
-          <TabTrigger name="history" href="/history">
-            <TabButton iconName="calendar" label="History" routePath="/history" />
-          </TabTrigger>
-          <TabTrigger name="insights" href="/insights">
-            <TabButton iconName="stats-chart" label="Insights" routePath="/insights" />
-          </TabTrigger>
           <TabTrigger name="profile" href="/profile">
-            <TabButton iconName="person" label="Profile" routePath="/profile" />
+          <TabButton iconName="person" label="Profile" routePath="/profile" />
           </TabTrigger>
         </View>
       </TabList>
@@ -64,24 +58,6 @@ export default function TabLayout() {
             <TabTrigger name="home" style={{ width: '100%', height: '100%' }}>
               <View style={styles.tabItemWrapper}>
                 <TabButton iconName="home" label="Home" routePath="/home" />
-              </View>
-            </TabTrigger>
-          </View>
-
-          {/* History Tab */}
-          <View style={styles.tabTrigger}>
-            <TabTrigger name="history" style={{ width: '100%', height: '100%' }}>
-              <View style={styles.tabItemWrapper}>
-                <TabButton iconName="calendar" label="History" routePath="/history" />
-              </View>
-            </TabTrigger>
-          </View>
-
-          {/* Insights Tab */}
-          <View style={styles.tabTrigger}>
-            <TabTrigger name="insights" style={{ width: '100%', height: '100%' }}>
-              <View style={styles.tabItemWrapper}>
-                <TabButton iconName="stats-chart" label="Insights" routePath="/insights" />
               </View>
             </TabTrigger>
           </View>
