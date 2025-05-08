@@ -65,7 +65,7 @@ const ws = new WebSocket(`wss://api.hume.ai/v0/stream/models?api_key=${apiKey}`)
 
 To use Token authentication you must first obtain an Access Token from the `POST /oauth2-cc/token` endpoint.
 
-This is a unique endpoint that uses the **"Basic" authentication scheme**, with your API key as the username and the Secret key as the password. This means you must concatenate your API key and Secret key, separated by a colon (`:`), base64 encode this value, and then put the result in the `Authorization` header of the request, prefixed with `Basic `.
+This is a unique endpoint that uses the **"Basic" authentication scheme**, with your API key as the username and the Secret key as the password. This means you must concatenate your API key and Secret key, separated by a colon (`:`), base64 encode this value, and then put the result in the `Authorization` header of the request, prefixed with `Basic`.
 
 You must also supply the `grant_type=client_credentials` parameter in the request body.
 

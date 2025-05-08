@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-### Playing or recording audio in background 
+### Playing or recording audio in background
 
 On iOS, audio playback and recording in background is only available in standalone apps, and it requires some extra configuration. On iOS, each background feature requires a special key in UIBackgroundModes array in your Info.plist file. In standalone apps this array is empty by default, so to use background features you will need to add appropriate keys to your app.json configuration.
 
@@ -161,20 +161,25 @@ import { useAudioPlayer, useAudioRecorder } from 'expo-audio';
 ### Constants
 
 #### Audio.AUDIO_SAMPLE_UPDATE
+
 Type: `'audioSampleUpdate'`
 
 #### Audio.PLAYBACK_STATUS_UPDATE
+
 Type: `'playbackStatusUpdate'`
 
 #### Audio.RECORDING_STATUS_UPDATE
+
 Type: `'recordingStatusUpdate'`
 
 #### Audio.RecordingPresets
+
 Type: `Record<string, RecordingOptions>`
 
 Constant which contains definitions of the two preset examples of RecordingOptions, as implemented in the Audio SDK.
 
 ##### HIGH_QUALITY
+
 ```js
 RecordingPresets.HIGH_QUALITY = {
   extension: '.m4a',
@@ -200,6 +205,7 @@ RecordingPresets.HIGH_QUALITY = {
 ```
 
 ##### LOW_QUALITY
+
 ```js
 RecordingPresets.LOW_QUALITY = {
   extension: '.m4a',
@@ -228,6 +234,7 @@ RecordingPresets.LOW_QUALITY = {
 ### Hooks
 
 #### useAudioPlayer(source, updateInterval)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | source (optional) | `number \| AudioSource` | Audio source to play |
@@ -236,6 +243,7 @@ RecordingPresets.LOW_QUALITY = {
 Returns: `AudioPlayer`
 
 #### useAudioPlayerStatus(player)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | player | `AudioPlayer` | Player instance |
@@ -243,6 +251,7 @@ Returns: `AudioPlayer`
 Returns: `AudioStatus`
 
 #### useAudioRecorder(options, statusListener)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | options | `RecordingOptions` | Recording options |
@@ -251,6 +260,7 @@ Returns: `AudioStatus`
 Returns: `AudioRecorder`
 
 #### useAudioRecorderState(recorder, interval)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | recorder | `AudioRecorder` | Recorder instance |
@@ -259,6 +269,7 @@ Returns: `AudioRecorder`
 Returns: `RecorderState`
 
 #### useAudioSampleListener(player, listener)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | player | `AudioPlayer` | Player instance |
@@ -269,80 +280,98 @@ Returns: `void`
 ### Classes
 
 #### AudioPlayer
+
 Type: `Class extends SharedObject<AudioEvents>`
 
 ##### AudioPlayer Properties
 
 ###### currentTime
+
 Type: `number`
 The current position through the audio item, in seconds.
 
 ###### duration
+
 Type: `number`
 The total duration of the audio in seconds.
 
 ###### id
+
 Type: `number`
 Unique identifier for the player object.
 
 ###### isAudioSamplingSupported
+
 Type: `boolean`
 Boolean value indicating whether audio sampling is supported on the platform.
 
 ###### isBuffering
+
 Type: `boolean`
 Boolean value indicating whether the player is buffering.
 
 ###### isLoaded
+
 Type: `boolean`
 Boolean value indicating whether the player is finished loading.
 
 ###### loop
+
 Type: `boolean`
 Boolean value indicating whether the player is currently looping.
 
 ###### muted
+
 Type: `boolean`
 Boolean value indicating whether the player is currently muted.
 
 ###### paused
+
 Type: `boolean`
 Boolean value indicating whether the player is currently paused.
 
 ###### playbackRate
+
 Type: `number`
 The current playback rate of the audio.
 
 ###### playing
+
 Type: `boolean`
 Boolean value indicating whether the player is currently playing.
 
 ###### shouldCorrectPitch
+
 Type: `boolean`
 A boolean describing if we are correcting the pitch for a changed rate.
 
 ###### volume
+
 Type: `number`
 The current volume of the audio.
 
 ##### AudioPlayer Methods
 
 ###### pause()
+
 Pauses the player.
 
 Returns: `void`
 
 ###### play()
+
 Start playing audio.
 
 Returns: `void`
 
 ###### remove()
+
 Remove the player from memory to free up resources.
 
 Returns: `void`
 
 ###### replace(source)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | source | `AudioSource` | New audio source |
@@ -352,6 +381,7 @@ Replaces the current audio source with a new one.
 Returns: `void`
 
 ###### seekTo(seconds)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | seconds | `number` | The number of seconds to seek by |
@@ -361,6 +391,7 @@ Seeks the playback by the given number of seconds.
 Returns: `Promise<void>`
 
 ###### setPlaybackRate(rate, pitchCorrectionQuality)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | rate | `number` | The playback rate of the audio |
@@ -371,51 +402,61 @@ Sets the current playback rate of the audio.
 Returns: `void`
 
 #### AudioRecorder
+
 Type: `Class extends SharedObject<RecordingEvents>`
 
 ##### AudioRecorder Properties
 
 ###### currentTime
+
 Type: `number`
 The current length of the recording, in seconds.
 
 ###### id
+
 Type: `number`
 Unique identifier for the recorder object.
 
 ###### isRecording
+
 Type: `boolean`
 Boolean value indicating whether the recording is in progress.
 
 ###### uri
+
 Type: `null | string`
 The uri of the recording.
 
 ##### AudioRecorder Methods
 
 ###### getAvailableInputs()
+
 Returns a list of available recording inputs. This method can only be called if the Recording has been prepared.
 
 Returns: `RecordingInput[]`
 A Promise that is fulfilled with an array of RecordingInput objects.
 
 ###### getCurrentInput()
+
 Returns the currently-selected recording input. This method can only be called if the Recording has been prepared.
 
 Returns: `RecordingInput`
 A Promise that is fulfilled with a RecordingInput object.
 
 ###### getStatus()
+
 Status of the current recording.
 
 Returns: `RecorderState`
 
 ###### pause()
+
 Pause the recording.
 
 Returns: `void`
 
 ###### prepareToRecordAsync(options)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | options (optional) | `Partial<RecordingOptions>` | Recording options |
@@ -425,11 +466,13 @@ Prepares the recording for recording.
 Returns: `Promise<void>`
 
 ###### record()
+
 Starts the recording.
 
 Returns: `void`
 
 ###### recordForDuration(seconds)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | seconds | `number` | The time in seconds to stop recording at |
@@ -439,6 +482,7 @@ Stops the recording once the specified time has elapsed.
 Returns: `void`
 
 ###### setInput(inputUid)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | inputUid | `string` | The uid of a RecordingInput |
@@ -449,6 +493,7 @@ Returns: `void`
 A Promise that is resolved if successful or rejected if not.
 
 ###### startRecordingAtTime(seconds)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | seconds | `number` | The time in seconds to start recording at |
@@ -458,6 +503,7 @@ Starts the recording at the given time.
 Returns: `void`
 
 ###### stop()
+
 Stop the recording.
 
 Returns: `Promise<void>`
@@ -465,12 +511,15 @@ Returns: `Promise<void>`
 ### Methods
 
 #### Audio.getRecordingPermissionsAsync()
+
 Returns: `Promise<PermissionResponse>`
 
 #### Audio.requestRecordingPermissionsAsync()
+
 Returns: `Promise<PermissionResponse>`
 
 #### Audio.setAudioModeAsync(mode)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | mode | `Partial<AudioMode>` | Audio mode configuration |
@@ -478,6 +527,7 @@ Returns: `Promise<PermissionResponse>`
 Returns: `Promise<void>`
 
 #### Audio.setIsAudioActiveAsync(active)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | active | `boolean` | Audio active state |
@@ -487,6 +537,7 @@ Returns: `Promise<void>`
 ### Event Subscriptions
 
 #### Audio.useAudioSampleListener(player, listener)
+
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | player | `AudioPlayer` | Player instance |
@@ -497,6 +548,7 @@ Returns: `void`
 ### Interfaces
 
 #### PermissionResponse
+
 An object obtained by permissions get and request functions.
 
 | Property | Type | Description |
@@ -509,22 +561,26 @@ An object obtained by permissions get and request functions.
 ### Types
 
 #### AndroidAudioEncoder
+
 Literal Type: `string`
 
 Acceptable values are: `'default' | 'amr_nb' | 'amr_wb' | 'aac' | 'he_aac' | 'aac_eld'`
 
 #### AndroidOutputFormat
+
 Literal Type: `string`
 
 Acceptable values are: `'default' | '3gp' | 'mpeg4' | 'amrnb' | 'amrwb' | 'aac_adts' | 'mpeg2ts' | 'webm'`
 
 #### AudioEvents
+
 | Property | Type | Description |
 |----------|------|-------------|
 | audioSampleUpdate | `(data: AudioSample) => void` | - |
 | playbackStatusUpdate | `(status: AudioStatus) => void` | - |
 
 #### AudioMode
+
 | Property | Type | Description |
 |----------|------|-------------|
 | allowsRecording | `boolean` | - |
@@ -534,17 +590,20 @@ Acceptable values are: `'default' | '3gp' | 'mpeg4' | 'amrnb' | 'amrwb' | 'aac_a
 | shouldRouteThroughEarpiece | `boolean` | - |
 
 #### AudioSample
+
 | Property | Type | Description |
 |----------|------|-------------|
 | channels | `AudioSampleChannel[]` | - |
 | timestamp | `number` | - |
 
 #### AudioSampleChannel
+
 | Property | Type | Description |
 |----------|------|-------------|
 | frames | `number[]` | - |
 
 #### AudioSource
+
 Type: `string` or `null` or object shaped as below:
 
 | Property | Type | Description |
@@ -553,6 +612,7 @@ Type: `string` or `null` or object shaped as below:
 | uri (optional) | `string` | A string representing the resource identifier for the audio |
 
 #### AudioStatus
+
 | Property | Type | Description |
 |----------|------|-------------|
 | currentTime | `number` | - |
@@ -570,16 +630,19 @@ Type: `string` or `null` or object shaped as below:
 | timeControlStatus | `string` | - |
 
 #### BitRateStrategy
+
 Literal Type: `string`
 
 Acceptable values are: `'constant' | 'longTermAverage' | 'variableConstrained' | 'variable'`
 
 #### InterruptionMode
+
 Literal Type: `string`
 
 Acceptable values are: `'mixWithOthers' | 'doNotMix' | 'duckOthers'`
 
 #### PermissionExpiration
+
 Literal Type: multiple types
 
 Permission expiration time. Currently, all permissions are granted permanently.
@@ -587,11 +650,13 @@ Permission expiration time. Currently, all permissions are granted permanently.
 Acceptable values are: `'never' | number`
 
 #### PitchCorrectionQuality
+
 Literal Type: `string`
 
 Acceptable values are: `'low' | 'medium' | 'high'`
 
 #### RecorderState
+
 | Property | Type | Description |
 |----------|------|-------------|
 | canRecord | `boolean` | - |
@@ -602,11 +667,13 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | url | `string \| null` | - |
 
 #### RecordingEvents
+
 | Property | Type | Description |
 |----------|------|-------------|
 | recordingStatusUpdate | `(status: RecordingStatus) => void` | status: RecordingStatus |
 
 #### RecordingInput
+
 | Property | Type | Description |
 |----------|------|-------------|
 | name | `string` | - |
@@ -614,6 +681,7 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | uid | `string` | - |
 
 #### RecordingOptions
+
 | Property | Type | Description |
 |----------|------|-------------|
 | android | `RecordingOptionsAndroid` | Recording options for Android platform |
@@ -625,6 +693,7 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | web (optional) | `RecordingOptionsWeb` | Recording options for Web platform |
 
 #### RecordingOptionsAndroid
+
 | Property | Type | Description |
 |----------|------|-------------|
 | audioEncoder | `AndroidAudioEncoder` | The desired audio encoder |
@@ -634,6 +703,7 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | sampleRate (optional) | `number` | The desired sample rate (e.g. 44100) |
 
 #### RecordingOptionsIos
+
 | Property | Type | Description |
 |----------|------|-------------|
 | audioQuality | `AudioQuality \| number` | The desired audio quality |
@@ -647,12 +717,14 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | sampleRate (optional) | `number` | The desired sample rate (e.g. 44100) |
 
 #### RecordingOptionsWeb
+
 | Property | Type | Description |
 |----------|------|-------------|
 | bitsPerSecond (optional) | `number` | - |
 | mimeType (optional) | `string` | - |
 
 #### RecordingStatus
+
 | Property | Type | Description |
 |----------|------|-------------|
 | error | `string \| null` | - |
@@ -664,6 +736,7 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 ### Enums
 
 #### AudioQuality
+
 | Name | Value | Description |
 |------|-------|-------------|
 | MIN | 0 | Lowest quality |
@@ -673,6 +746,7 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | MAX | 127 | Maximum quality |
 
 #### IOSOutputFormat
+
 | Name | Value | Description |
 |------|-------|-------------|
 | MPEGLAYER1 | ".mp1" | MP1 format |
@@ -711,6 +785,7 @@ Acceptable values are: `'low' | 'medium' | 'high'`
 | ULAW | "ulaw" | µ-law format |
 
 #### PermissionStatus
+
 | Name | Value | Description |
 |------|-------|-------------|
 | DENIED | "denied" | User has denied the permission |

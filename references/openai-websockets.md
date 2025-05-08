@@ -17,8 +17,6 @@ In a server-to-server integration with Realtime, your backend system will connec
 
 WebSocket connections can also be authenticated with an ephemeral client token ([as shown here in the WebRTC connection guide](/docs/guides/realtime-webrtc)) if you choose to connect to the Realtime API via WebSocket on a client device.
 
-  
-
 Standard OpenAI API tokens **should only be used in secure server-side environments**.
 
 Connection details

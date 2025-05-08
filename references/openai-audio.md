@@ -7,19 +7,18 @@ Learn how to manage Realtime sessions, conversations, model responses, and funct
 Once you have connected to the Realtime API through either [WebRTC](/docs/guides/realtime-webrtc) or [WebSocket](/docs/guides/realtime-websocket), you can build applications with a Realtime AI model. Doing so will require you to **send client events** to initiate actions, and **listen for server events** to respond to actions taken by the Realtime API. This guide will walk through the event flows required to use model capabilities like audio and text generation, and how to think about the state of a Realtime session.
 
 ## About Realtime sessions
+
 -----------------------
 
 A Realtime session is a stateful interaction between the model and a connected client. The key components of the session are:
 
-*   The **session** object, which controls the parameters of the interaction, like the model being used, the voice used to generate output, and other configuration.
-*   A **conversation**, which represents user inputs and model outputs generated during the current session.
-*   **Responses**, which are model-generated audio or text outputs that are added to the conversation.
+* The **session** object, which controls the parameters of the interaction, like the model being used, the voice used to generate output, and other configuration.
+* A **conversation**, which represents user inputs and model outputs generated during the current session.
+* **Responses**, which are model-generated audio or text outputs that are added to the conversation.
 
 **Input audio buffer and WebSockets**
 
 If you are using WebRTC, much of the media handling required to send and receive audio from the model is assisted by WebRTC browser APIs.
-
-  
 
 If you are using WebSockets for audio, you will need to manually interact with the **input audio buffer** as well as the objects listed above. You'll be responsible for sending and receiving Base64-encoded audio bytes, and handling those as appropriate in your integration code.
 
@@ -28,6 +27,7 @@ All these components together make up a Realtime session. You will use client-se
 ![diagram realtime state](https://openaidevs.retool.com/api/file/11fe71d2-611e-4a26-a587-881719a90e56)
 
 ## Session lifecycle events
+
 ------------------------
 
 After initiating a session via either [WebRTC](/docs/guides/realtime-webrtc) or [WebSockets](/docs/guides/realtime-websockets), the server will send a [`session.created`](/docs/api-reference/realtime-server-events/session/created) event indicating the session is ready. On the client, you can update the current session configuration with the [`session.update`](/docs/api-reference/realtime-client-events/session/update) event. Most session properties can be updated at any time, except for the `voice` the model uses for audio output, after the model has responded with audio once during the session. The maximum duration of a Realtime session is **30 minutes**.
@@ -64,6 +64,7 @@ When the session has been updated, the server will emit a [`session.updated`](/d
 |session.update|session.createdsession.updated|
 
 ## Text inputs and outputs
+
 -----------------------
 
 To generate text with a Realtime model, you can add text inputs to the current conversation, ask the model to generate a response, and listen for server-sent events indicating the progress of the model's response. In order to generate text, the [session must be configured](/docs/api-reference/realtime-client-events/session/update) with the `text` modality (this is true by default).
@@ -166,6 +167,7 @@ While the model response is being generated, the server will emit a number of li
 |conversation.item.createresponse.create|conversation.item.createdresponse.createdresponse.output_item.addedresponse.content_part.addedresponse.text.deltaresponse.text.doneresponse.content_part.doneresponse.output_item.doneresponse.donerate_limits.updated|
 
 ## Audio inputs and outputs
+
 ------------------------
 
 One of the most powerful features of the Realtime API is voice-to-voice interaction with the model, without an intermediate text-to-speech or speech-to-text step. This enables lower latency for voice interfaces, and gives the model more data to work with around the tone and inflection of voice input.
@@ -202,10 +204,10 @@ By default, WebRTC clients don't need to send any client events to the Realtime 
 
 However, WebRTC clients still receive a number of server-sent lifecycle events as audio is moving back and forth between client and server over the peer connection. An incomplete sample of server events that are sent during a WebRTC session:
 
-*   When input is sent over the local media track, you will receive [`input_audio_buffer.speech_started`](/docs/api-reference/realtime-server-events/input_audio_buffer/speech_started) events from the server.
-*   When local audio input stops, you'll receive the [`input_audio_buffer.speech_stopped`](/docs/api-reference/realtime-server-events/input_audio_buffer/speech_started) event.
-*   You'll receive [delta events for the in-progress audio transcript](/docs/api-reference/realtime-server-events/response/audio_transcript/delta).
-*   You'll receive a [`response.done`](/docs/api-reference/realtime-server-events/response/done) event when the model has transcribed and completed sending a response.
+* When input is sent over the local media track, you will receive [`input_audio_buffer.speech_started`](/docs/api-reference/realtime-server-events/input_audio_buffer/speech_started) events from the server.
+* When local audio input stops, you'll receive the [`input_audio_buffer.speech_stopped`](/docs/api-reference/realtime-server-events/input_audio_buffer/speech_started) event.
+* You'll receive [delta events for the in-progress audio transcript](/docs/api-reference/realtime-server-events/response/audio_transcript/delta).
+* You'll receive a [`response.done`](/docs/api-reference/realtime-server-events/response/done) event when the model has transcribed and completed sending a response.
 
 Manipulating WebRTC APIs for media streams may give you all the control you need in your application. However, it may occasionally be necessary to use lower-level interfaces for audio input and output. Refer to the WebSockets section below for more information and a listing of events required for granular audio input handling.
 
@@ -226,8 +228,8 @@ To stream audio input to the server, you can use the [`input_audio_buffer.append
 
 The format of the input chunks can be configured either for the entire session, or per response.
 
-*   Session: `session.input_audio_format` in [`session.update`](/docs/api-reference/realtime-client-events/session/update)
-*   Response: `response.input_audio_format` in [`response.create`](/docs/api-reference/realtime-client-events/response/create)
+* Session: `session.input_audio_format` in [`session.update`](/docs/api-reference/realtime-client-events/session/update)
+* Response: `response.input_audio_format` in [`response.create`](/docs/api-reference/realtime-client-events/response/create)
 
 Append audio input bytes to the conversation
 
@@ -378,8 +380,8 @@ Note that the [`response.audio.done`](/docs/api-reference/realtime-server-events
 
 The format of the output chunks can be configured either for the entire session, or per response.
 
-*   Session: `session.output_audio_format` in [`session.update`](/docs/api-reference/realtime-client-events/session/update)
-*   Response: `response.output_audio_format` in [`response.create`](/docs/api-reference/realtime-client-events/response/create)
+* Session: `session.output_audio_format` in [`session.update`](/docs/api-reference/realtime-client-events/session/update)
+* Response: `response.output_audio_format` in [`response.create`](/docs/api-reference/realtime-client-events/response/create)
 
 Listen for response.audio.delta events
 
@@ -405,6 +407,7 @@ def on_message(ws, message):
 ```
 
 ## Voice activity detection (VAD)
+
 ------------------------------
 
 By default, Realtime sessions have **voice activity detection (VAD)** enabled, which means the API will determine when the user has started or stopped speaking, and automatically start to respond. The behavior and sensitivity of VAD can be configured through the `session.turn_detection` property of the [`session.update`](/docs/api-reference/realtime-client-events/session/update) client event.
@@ -413,9 +416,9 @@ VAD can be disabled by setting `turn_detection` to `null` with the [`session.upd
 
 When VAD is disabled, the client will have to manually emit some additional client events to trigger audio responses:
 
-*   Manually send [`input_audio_buffer.commit`](/docs/api-reference/realtime-client-events/input_audio_buffer/commit), which will create a new user input item for the conversation.
-*   Manually send [`response.create`](/docs/api-reference/realtime-client-events/response/create) to trigger an audio response from the model.
-*   Send [`input_audio_buffer.clear`](/docs/api-reference/realtime-client-events/input_audio_buffer/clear) before beginning a new user input.
+* Manually send [`input_audio_buffer.commit`](/docs/api-reference/realtime-client-events/input_audio_buffer/commit), which will create a new user input item for the conversation.
+* Manually send [`response.create`](/docs/api-reference/realtime-client-events/response/create) to trigger an audio response from the model.
+* Send [`input_audio_buffer.clear`](/docs/api-reference/realtime-client-events/input_audio_buffer/clear) before beginning a new user input.
 
 ### Keep VAD, but disable automatic responses
 
@@ -424,6 +427,7 @@ If you would like to keep VAD mode enabled, but would just like to retain the ab
 This can be useful for moderation or input validation, where you're comfortable trading a bit more latency in the interaction for control over inputs.
 
 ## Create responses outside the default conversation
+
 -------------------------------------------------
 
 By default, all responses generated during a session are added to the session's conversation state (the "default conversation"). However, you may want to generate model responses outside the context of the session's default conversation, or have multiple responses generated concurrently. You might also want to have more granular control over which conversation items are considered while the model generates a response (e.g. only the last N number of turns).
@@ -645,14 +649,15 @@ ws.send(json.dumps(event))
 ```
 
 ## Function calling
+
 ----------------
 
 The Realtime models also support **function calling**, which enables you to execute custom code to extend the capabilities of the model. Here's how it works at a high level:
 
-1.  When [updating the session](/docs/api-reference/realtime-client-events/session/update) or [creating a response](/docs/api-reference/realtime-client-events/response/create), you can specify a list of available functions for the model to call.
-2.  If when processing input, the model determines it should make a function call, it will add items to the conversation representing arguments to a function call.
-3.  When the client detects conversation items that contain function call arguments, it will execute custom code using those arguments
-4.  When the custom code has been executed, the client will create new conversation items that contain the output of the function call, and ask the model to respond.
+1. When [updating the session](/docs/api-reference/realtime-client-events/session/update) or [creating a response](/docs/api-reference/realtime-client-events/response/create), you can specify a list of available functions for the model to call.
+2. If when processing input, the model determines it should make a function call, it will add items to the conversation representing arguments to a function call.
+3. When the client detects conversation items that contain function call arguments, it will execute custom code using those arguments
+4. When the custom code has been executed, the client will create new conversation items that contain the output of the function call, and ask the model to respond.
 
 Let's see how this would work in practice by adding a callable function that will provide today's horoscope to users of the model. We'll show the shape of the client event objects that need to be sent, and what the server will emit in turn.
 
@@ -660,8 +665,8 @@ Let's see how this would work in practice by adding a callable function that wil
 
 First, we must give the model a selection of functions it can call based on user input. Available functions can be configured either at the session level, or the individual response level.
 
-*   Session: `session.tools` property in [`session.update`](/docs/api-reference/realtime-client-events/session/update)
-*   Response: `response.tools` property in [`response.create`](/docs/api-reference/realtime-client-events/response/create)
+* Session: `session.tools` property in [`session.update`](/docs/api-reference/realtime-client-events/session/update)
+* Response: `response.tools` property in [`response.create`](/docs/api-reference/realtime-client-events/response/create)
 
 Here's an example client event payload for a `session.update` that configures a horoscope generation function, that takes a single argument (the astrological sign for which the horoscope should be generated):
 
@@ -815,9 +820,9 @@ Once you are ready to give the model the results of your custom code, you can cr
 }
 ```
 
-*   The conversation item type is `function_call_output`
-*   `item.call_id` is the same ID we got back in the `response.done` event above
-*   `item.output` is a JSON string containing the results of our function call
+* The conversation item type is `function_call_output`
+* `item.call_id` is the same ID we got back in the `response.done` event above
+* `item.output` is a JSON string containing the results of our function call
 
 Once we have added the conversation item containing our function call results, we again emit the `response.create` event from the client. This will trigger a model response using the data from the function call.
 
@@ -830,6 +835,7 @@ Once we have added the conversation item containing our function call results, w
 ```
 
 ## Error handling
+
 --------------
 
 The [`error`](/docs/api-reference/realtime-server-events/error) event is emitted by the server whenever an error condition is encountered on the server during the session. Occasionally, these errors can be traced to a client event that was emitted by your application.
@@ -858,6 +864,7 @@ This unsuccessful event sent from the client will emit an error event like the f
 ```
 
 ## Next steps
+
 ----------
 
 Realtime models unlock new possibilities for AI interactions. We can't wait to hear about what you create with the Realtime API! As you continue to explore, here are a few other resources that may be useful.
@@ -868,7 +875,7 @@ Realtime Console
 
 The Realtime console sample app shows how to exercise function calling, client and server events, and much more.
 
-](https://github.com/openai/openai-realtime-console)[
+](<https://github.com/openai/openai-realtime-console)[>
 
 Event API reference
 

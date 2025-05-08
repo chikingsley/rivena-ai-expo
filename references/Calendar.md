@@ -117,7 +117,7 @@ Handler which gets executed when visible month changes in calendar
 
 ### monthFormat
 
-Month format for the header's title. Formatting values: http://arshaw.com/xdate/#Formatting  
+Month format for the header's title. Formatting values: <http://arshaw.com/xdate/#Formatting>  
 <span style={{color: 'grey'}}>string</span>
 
 ### hideDayNames
@@ -462,11 +462,11 @@ The loading indicator next to the month name will be displayed if `<Calendar/>` 
 
 If you want to have complete control over the calendar styles you can do it by overriding default `style.ts` files. For example, if you want to override `<CalendarHeader/>` style first you have to find stylesheet id for this file:
 
-https://github.com/wix/react-native-calendars/blob/master/src/calendar/header/style.ts#L60
+<https://github.com/wix/react-native-calendars/blob/master/src/calendar/header/style.ts#L60>
 
 In this case it is `stylesheet.calendar.header`. Next you can add overriding stylesheet to your theme with this id.
 
-https://github.com/wix/react-native-calendars/blob/master/example/src/screens/calendars.tsx#L142
+<https://github.com/wix/react-native-calendars/blob/master/example/src/screens/calendars.tsx#L142>
 
 ```javascript
 theme={{

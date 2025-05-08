@@ -25,10 +25,10 @@ You should prefer using context injection instead of a CLM for use cases that do
 
 ## Set up the config
 
-First, create a new config, or update an existing config and select the "custom language model" option in the "Set up LLM" step. Type in the URL of your custom language model endpoint. 
+First, create a new config, or update an existing config and select the "custom language model" option in the "Set up LLM" step. Type in the URL of your custom language model endpoint.
 
-- If you are using the SSE interface (recommended), the URL should start with `https://` and end with `/chat/completions`. 
-- If you are using websockets, the URL should start with `wss://`. 
+- If you are using the SSE interface (recommended), the URL should start with `https://` and end with `/chat/completions`.
+- If you are using websockets, the URL should start with `wss://`.
 
 The endpoint needs to be accessible from the public internet. If you are developing locally, you can use a service like ngrok to give your local server a publicly accessible URL.
 
@@ -132,6 +132,7 @@ async def root(
 The following example shows how to build a CLM on top of a text stream that originates from some place other than an OpenAI-compatible LLM.
 
 In general, this involves two more steps than the OpenAI-compatible example:
+
 1. Convert the `role` and `content` fields sent by Hume into the format your model provider expects. (Not shown in this example, as the output is just a stream of hardcoded text.)
 2. Convert the output of your LLM provider into the OpenAI format before transmitting them back to Hume. For this we use the "tiktoken" library provided by OpenAI, as well as constructors from OpenAI's SDK.
 
@@ -372,6 +373,7 @@ You can send multiple `assistant_input` payloads consecutively to stream text to
 For managing conversational state and connecting your frontend experiences with your backend data and logic, you should set a `custom_session_id` for the chat.
 
 Using a `custom_session_id` will enable you to:
+
 - maintain user state on your backend
 - pause/resume conversations
 - persist conversations across sessions

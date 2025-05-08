@@ -3,6 +3,7 @@
 ## Overview
 
 This document outlines the detailed plan for converting the NextJS mockups to Expo React Native using:
+
 - React Native Reusables (shadcn/ui for React Native)
 - Expo Reanimated for animations (replacing Framer Motion)
 - Expo Router for navigation
@@ -11,11 +12,13 @@ This document outlines the detailed plan for converting the NextJS mockups to Ex
 ## Project Structure
 
 ### Current Structure
+
 - NextJS mockups in `/references/mockups/therapy-ai-app/`
 - Existing Expo app with bottom tab navigation in `/app/(tabs)/`
 - Example page using React Native Reusables in `/app/(tabs)/home.tsx`
 
 ### Target Structure
+
 Based on the app's requirements and current structure, we'll implement:
 
 ```
@@ -54,6 +57,7 @@ Based on the app's requirements and current structure, we'll implement:
 ### 1. Home Screen (`/app/(tabs)/index.tsx`)
 
 **Components:**
+
 - `StatusBar` - Shows time and device status
 - `Header` - Contains streak counter, greeting, and profile button
 - `WeeklyCalendar` - Shows days of the week with completion status
@@ -61,6 +65,7 @@ Based on the app's requirements and current structure, we'll implement:
 - `SuggestionsList` - List of session suggestions
 
 **State Management:**
+
 - User information (name, streak)
 - Current date/time
 - Weekly calendar data
@@ -69,6 +74,7 @@ Based on the app's requirements and current structure, we'll implement:
 ### 2. History Screen (`/app/(tabs)/history.tsx`)
 
 **Components:**
+
 - `StatusBar` - Shows time and device status
 - `Header` - Contains tab navigation and profile button
 - `DateSelector` - Shows and allows selection of current date
@@ -76,6 +82,7 @@ Based on the app's requirements and current structure, we'll implement:
 - `HistoryCard` - Individual history item with icon, title, and metadata
 
 **State Management:**
+
 - History items (sessions, life events)
 - Active tab (day, week, month, year)
 - Selected date
@@ -83,6 +90,7 @@ Based on the app's requirements and current structure, we'll implement:
 ### 3. Insights Screen (`/app/(tabs)/insights.tsx`)
 
 **Components:**
+
 - `StatusBar` - Shows time and device status
 - `Header` - Contains period selector and profile button
 - `Title` - "trends." title display
@@ -92,6 +100,7 @@ Based on the app's requirements and current structure, we'll implement:
 - `MonthSelector` - UI for selecting month to view
 
 **State Management:**
+
 - Selected period (week, month, year)
 - Current month
 - Selected mood
@@ -100,6 +109,7 @@ Based on the app's requirements and current structure, we'll implement:
 ### 4. Profile Screen (`/app/(tabs)/profile.tsx`)
 
 **Components:**
+
 - `StatusBar` - Shows time and device status
 - `Header` - Contains close button
 - `Title` - "your profile." title display
@@ -109,6 +119,7 @@ Based on the app's requirements and current structure, we'll implement:
 - `ThemeToggle` - Toggle for dark/light mode
 
 **State Management:**
+
 - Theme mode (dark/light)
 - User preferences
 - Premium status
@@ -116,6 +127,7 @@ Based on the app's requirements and current structure, we'll implement:
 ### 5. Session Screen (`/app/session/[id].tsx`)
 
 **Components:**
+
 - `SessionHeader` - Contains back button, session type, and calendar button
 - `ProgressVisualization` - Shows session progress with phase markers
 - `VoiceVisualization` - Complex component with different states:
@@ -127,6 +139,7 @@ Based on the app's requirements and current structure, we'll implement:
 - `HomeIndicator` - Bottom home indicator
 
 **State Management:**
+
 - Session state (listening, speaking, reflecting)
 - Current topic and duration
 - Session phase and progress
@@ -136,6 +149,7 @@ Based on the app's requirements and current structure, we'll implement:
 ### 6. Calendar Modal (Shared Component)
 
 **Components:**
+
 - `ModalContainer` - Animated container for the modal
 - `ModalHeader` - Header with title and close button
 - `MonthNavigation` - Controls for navigating between months
@@ -144,6 +158,7 @@ Based on the app's requirements and current structure, we'll implement:
 - `ModalFooter` - Contains action buttons
 
 **State Management:**
+
 - Calendar days data
 - Session history data
 - Selected date
@@ -151,11 +166,13 @@ Based on the app's requirements and current structure, we'll implement:
 ### 7. Bottom Navigation (Shared Component)
 
 **Components:**
+
 - `TabBar` - Container for navigation tabs
 - `TabItem` - Individual tab with icon and label
 - `FloatingActionButton` - Center button for quick actions
 
 **State Management:**
+
 - Active tab
 - Quick action menu state
 
@@ -332,6 +349,7 @@ interface HistoryState {
 ### 1. Voice Visualization Animations
 
 **Framer Motion (Original):**
+
 ```jsx
 <motion.div
   className="absolute rounded-full border-2 border-primary"
@@ -347,6 +365,7 @@ interface HistoryState {
 ```
 
 **Reanimated (Conversion):**
+
 ```jsx
 const pulseAnim = useSharedValue(0);
 
@@ -396,6 +415,7 @@ return (
 ### 2. Topics Panel Animation
 
 **Framer Motion (Original):**
+
 ```jsx
 <AnimatePresence>
   {topicsExpanded && (
@@ -413,6 +433,7 @@ return (
 ```
 
 **Reanimated (Conversion):**
+
 ```jsx
 const animHeight = useSharedValue(0);
 const animOpacity = useSharedValue(0);
@@ -455,6 +476,7 @@ return (
 ### Phase 1: Foundation and Shared Components (2 days)
 
 **Day 1:**
+
 1. Set up Zustand store structure
    ✅ Create userStore.ts
    ✅ Create themeStore.ts
@@ -469,6 +491,7 @@ return (
    - Button variants
 
 **Day 2:**
+
 1. Create animation utilities for Reanimated
    - Create animation hooks for common patterns
    - Set up voice visualization base components
@@ -480,6 +503,7 @@ return (
 ### Phase 2: Home and History Screens (2 days)
 
 **Day 3:**
+
 1. Implement Home Screen
    - StatusBar component
    - Header with streak counter
@@ -489,6 +513,7 @@ return (
    - Connect to userStore and sessionStore
 
 **Day 4:**
+
 1. Implement History Screen
    - StatusBar component
    - Header with tabs
@@ -500,6 +525,7 @@ return (
 ### Phase 3: Session Screen (3 days)
 
 **Day 5:**
+
 1. Implement Session Screen structure
    - SessionHeader component
    - ProgressVisualization component
@@ -507,12 +533,14 @@ return (
    - TopicsPanel component
 
 **Day 6:**
+
 1. Implement Voice Visualization components
    - ListeningState animation
    - SpeakingState animation
    - ReflectingState animation
 
 **Day 7:**
+
 1. Complete Session Screen
    - Integrate all animations
    - Connect to sessionStore
@@ -521,6 +549,7 @@ return (
 ### Phase 4: Profile and Insights Screens (2 days)
 
 **Day 8:**
+
 1. Implement Profile Screen
    - StatusBar component
    - Header with close button
@@ -531,6 +560,7 @@ return (
    - Connect to userStore and themeStore
 
 **Day 9:**
+
 1. Implement Insights Screen
    - StatusBar component
    - Header with period selector
@@ -542,12 +572,14 @@ return (
 ### Phase 5: Polish and Integration (2 days)
 
 **Day 10:**
+
 1. Integrate all screens with navigation
    - Set up Expo Router links
    - Implement deep linking
    - Test navigation flow
 
 **Day 11:**
+
 1. Final polish and optimization
    - Performance testing
    - Animation refinement

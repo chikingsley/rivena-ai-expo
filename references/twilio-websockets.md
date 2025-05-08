@@ -1,8 +1,6 @@
 Consume a real-time Media Stream using WebSockets, Python, and Flask
 
-
 Meet Media Streams
-
 
 With Twilio's Media Streams, you can access real-time voice data from a Twilio call. Media Streams will stream the audio from the call for its entire duration to a location of your choice.
 
@@ -15,7 +13,6 @@ Want to see the Flask portion of this project in its entirety? Head over to the 
 
 What are WebSockets?
 
-
 Twilio Media Streams uses WebSockets to deliver your audio.
 
 A WebSocket is an upgraded HTTP protocol. WebSockets are intended to be used for long-running connections and are ideal for real-time applications. A handshake is made, a connection is created, and, unlike HTTP, multiple messages are expected to be sent over the socket until it is closed. This helps to remove the need for long-polling applications.
@@ -26,10 +23,8 @@ There are numerous WebSocket Server implementations available for just about eve
 
 Set up your Python environment
 
-
 In this tutorial, we're going to use the web framework Flask and the WebSocket package Flask Sockets
 . Create a virtual environment and install flask-sockets in your terminal:
-
 
 Copy code block
 python3 -m venv venv
@@ -39,12 +34,10 @@ Now that the package is installed, we can spin up a Flask web server.
 
 Build your WebSocket server
 
-
 The sockets decorator helps you create a WebSocket route with @socket.route.
 
 Create a @socket decorator
 This allows you to respond to named WebSocket paths (e.g., /media)
-
 
 Copy code block
 import base64
@@ -94,7 +87,6 @@ def echo(ws):
         message_count += 1
 
     app.logger.info("Connection closed. Received a total of {} messages".format(message_count))
-
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
@@ -158,7 +150,6 @@ def echo(ws):
 
     app.logger.info("Connection closed. Received a total of {} messages".format(message_count))
 
-
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
     from gevent import pywsgi
@@ -219,7 +210,6 @@ def echo(ws):
         message_count += 1
 
     app.logger.info("Connection closed. Received a total of {} messages".format(message_count))
-
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
@@ -283,7 +273,6 @@ def echo(ws):
         message_count += 1
 
     app.logger.info("Connection closed. Received a total of {} messages".format(message_count))
-
 
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
@@ -356,7 +345,6 @@ def echo(ws):
 
     app.logger.info("Connection closed. Received a total of {} messages".format(message_count))
 
-
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
     from gevent import pywsgi
@@ -418,7 +406,6 @@ def echo(ws):
 
     app.logger.info("Connection closed. Received a total of {} messages".format(message_count))
 
-
 if __name__ == '__main__':
     app.logger.setLevel(logging.DEBUG)
     from gevent import pywsgi
@@ -429,7 +416,6 @@ if __name__ == '__main__':
     server.serve_forever()
 Once your code is all in place, start your Flask server by running this command in your terminal:
 
-
 Copy code block
 python app.py
 Now your server should be running on your localhost port 5000. Congratulations! Only one thing left to do here: make sure that Twilio can reach your local web server.
@@ -439,19 +425,16 @@ We recommend that you make use of an ssh tunnel service like ngrok, which suppor
 
 Since our server is running on port 5000, we'll start a tunnel using:
 
-
 Copy code block
 ngrok http 5000
 This will generate a random ngrok subdomain. Copy that URL - you'll need it in the next section.
 
 Start streaming audio
 
-
 To begin streaming your call's audio with Twilio, you can use the <Stream> TwiML verb.
 
 Create a new TwiML Bin
  with the following TwiML:
-
 
 Copy code block
 <?xml version="1.0" encoding="UTF-8"?>
@@ -476,13 +459,11 @@ By default, Twilio will stream the incoming track - in our case, the incoming ph
 
 Try it out
 
-
 Find a friend or family member willing to help you test your streaming web server (or use a second phone that is different than the one you listed in your TwiML bin).
 
 One of you should call your Twilio phone number, which will then connect the call to the number you specified in your TwiML bin. Keep an eye on your console output and start talking - you should see your conversation appear in the console as you talk!
 
 What's next?
-
 
 Real-time access to your audio data opens up new doors of innovation for you. From real-time visual effects to bioinformatics, you are certain to benefit from this access to live data.
 
@@ -497,5 +478,3 @@ Our community has created a starter set for many languages
  and services. Check it out for inspiration in building your real-time applications, and consider contributing.
 
 We can't wait to see what you build!
-
-

@@ -140,6 +140,7 @@ function stopAudio() {
 ## Phase 2: Custom Language Model (CLM) Integration
 
 For Phase 2, we'll create a server-side CLM that:
+
 1. Receives requests from Hume EVI
 2. Forwards them to our preferred LLM (OpenAI, etc.)
 3. Returns responses in Hume's expected format
@@ -192,4 +193,4 @@ app.post('/chat/completions', async (req, res) => {
 1. **Authentication**: Hume uses API key + Secret key vs OpenAI's token-based auth
 2. **Message Structure**: Hume has more message types and a different format
 3. **Emotion Analysis**: Hume provides prosody scores with transcriptions
-4. **Architecture**: Three-tier vs two-tier architecture 
+4. **Architecture**: Three-tier vs two-tier architecture

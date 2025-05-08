@@ -265,9 +265,11 @@ Ensure the details you specify in the [`session_settings`](https://dev.hume.ai/r
 Audio issues can surface in several different ways:
 
 - **Transcription errors** - you may see an error message over the chat WebSocket like
+
   ```
   {"type":"error","code":"I0118","slug":"transcription_disconnected","message":"Transcription socket disconnected."}
   ```
+
   followed by the chat ending. This results from an error that happened while attempting to transcribe speech from the audio you sent, and often indicates that the audio is malformed.
 
 - **Unexpected silence** - Another failure mode is when you send [`audio_input`](https://dev.hume.ai/reference/empathic-voice-interface-evi/chat/chat#send.Audio%20Input.type) messages, the user is speaking, but you do not receive any messages back, neither `user_message`, nor `assistant_message`. This can happen when EVI believes it has successfully decoded the audio, but has assumed the wrong format, and while the bytes of your audio would contain speech if decoded in the correct format, they appear to be static or silence when decoded incorrectly.
